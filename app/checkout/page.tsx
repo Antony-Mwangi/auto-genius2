@@ -19,8 +19,28 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"M-Pesa" | "Cash on Delivery">("M-Pesa");
 
   useEffect(() => {
+    // 1. Sync checkout items from local cache
     const savedCart = localStorage.getItem("autogenius_cart");
     if (savedCart) setCart(JSON.parse(savedCart));
+
+    // 2. Fetch authenticated profile data to autofill user information dynamically
+    async function autoFillUserData() {
+      try {
+        const profileRes = await fetch("/api/auth/me");
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          if (profileData?.user) {
+            setName(profileData.user.fullName || "");
+            if (profileData.user.phone) {
+              setPhone(profileData.user.phone);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to autofill profile parameters:", err);
+      }
+    }
+    autoFillUserData();
   }, []);
 
   const total = cart.reduce((acc: number, item: any) => acc + item.product.price * item.quantity, 0);
@@ -32,6 +52,7 @@ export default function CheckoutPage() {
     setErrorMessage(null);
 
     try {
+      // Cookies containing the session JWT are passed natively by the runtime context
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,13 +90,14 @@ export default function CheckoutPage() {
               <p className="text-xs text-gray-400 leading-relaxed">The administrative warehouse catalog terminal has been alerted to launch shipping logistics.</p>
             </div>
             <button 
+              type="button"
               onClick={() => {
                 setShowSuccessModal(false);
-                router.push("/shop");
+                router.push("/dashboard"); // Redirect directly to the dashboard tracking timeline matrix
               }}
               className="w-full bg-orange-500 hover:bg-orange-400 text-white font-black py-3 rounded-xl text-xs transition cursor-pointer shadow-md shadow-orange-500/10"
             >
-              Return to Catalog
+              Go to Dashboard
             </button>
           </div>
         </div>

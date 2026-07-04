@@ -1,3 +1,4 @@
+// app/api/login/route.ts or app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
@@ -25,17 +26,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Invalid email or password." }, { status: 401 });
     }
 
-    // 1. Generate a secure JWT containing the user identity
+    // 1. Generate a secure JWT containing full user identity context
+    // CHANGED: Added fullName explicitly so edge runtimes and frontend components can read it instantly
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      { 
+        id: user._id, 
+        fullName: user.fullName, 
+        email: user.email, 
+        role: user.role 
+      },
       JWT_SECRET,
-      { expiresIn: "7d" } // Token expires in 7 days
+      { expiresIn: "7d" }
     );
 
-    // CHANGED: Establish target landing coordinates dynamically based on account permissions matrix
     const targetDashboard = user.role === "admin" ? "/admin/dashboard" : "/dashboard";
 
-    // 2. Build the response payload including the dynamic redirect target
     const response = NextResponse.json(
       {
         message: "Login successful.",
@@ -45,14 +50,13 @@ export async function POST(request: Request) {
       { status: 200 }
     );
 
-    // 3. Set the JWT inside an HTTP-only cookie for robust security
     response.cookies.set({
       name: "token",
       value: token,
-      httpOnly: true, // Prevents client-side scripts from reading the token
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "strict", // Protects against CSRF attacks
-      maxAge: 60 * 60 * 24 * 7, // 7 days in seconds
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
 

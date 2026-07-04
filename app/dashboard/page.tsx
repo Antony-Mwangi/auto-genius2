@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -19,26 +20,38 @@ export default function CustomerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState("Valued Customer");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Sync customer session metadata and fetch their orders
   useEffect(() => {
     async function fetchCustomerDashboardData() {
       try {
-        // Fetch orders using the standard customer validation endpoint
+        // 1. Fetch user profile data to personalize the UI explicitly
+        const profileRes = await fetch("/api/auth/me"); 
+        if (!profileRes.ok) {
+          // PROTECTION SHIELD: If session is expired/missing, bounce back to authentication node
+          router.push("/login");
+          return;
+        }
+        
+        const profileData = await profileRes.json();
+        if (profileData?.user) {
+          setCustomerName(profileData.user.fullName);
+          setCustomerEmail(profileData.user.email);
+        }
+
+        // 2. Fetch isolated orders belonging uniquely to this verified user session
         const res = await fetch("/api/orders");
-        if (!res.ok) throw new Error("Failed to synchronize profile transactions.");
+        if (!res.ok) {
+          if (res.status === 401) {
+            router.push("/login");
+            return;
+          }
+          throw new Error("Failed to synchronize profile transactions.");
+        }
         
         const data = await res.json();
-        
-        /* NOTE: In a production MERN/NextAuth flow, you would filter by the logged-in customer's session token.
-           For this setup, it dynamically parses the order ledger.
-        */
         setOrders(data);
-        
-        if (data.length > 0) {
-          setCustomerName(data[0].customerName);
-        }
       } catch (err: any) {
         setError(err.message || "Something went wrong.");
       } finally {
@@ -46,7 +59,7 @@ export default function CustomerDashboardPage() {
       }
     }
     fetchCustomerDashboardData();
-  }, []);
+  }, [router]);
 
   const handleLogout = async () => {
     try {
@@ -62,7 +75,6 @@ export default function CustomerDashboardPage() {
     }
   };
 
-  // Derive simple account summary metrics
   const totalSpent = orders.reduce((acc, order) => acc + order.total, 0);
   const activeTrackCount = orders.filter(o => o.status === "Pending").length;
 
@@ -81,26 +93,18 @@ export default function CustomerDashboardPage() {
             </span>
           </div>
 
-          {/* Desktop Controls */}
           <div className="hidden md:flex items-center gap-4">
             <Link href="/shop" className="text-xs font-bold text-gray-300 hover:text-white transition flex items-center gap-1.5">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-              </svg>
               Back to Store
             </Link>
             <button 
               onClick={handleLogout}
               className="text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-              </svg>
               Logout Account
             </button>
           </div>
 
-          {/* Mobile Menu Toggle */}
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="md:hidden p-2 bg-white/5 border border-white/10 rounded-xl text-gray-400"
@@ -111,9 +115,8 @@ export default function CustomerDashboardPage() {
           </button>
         </div>
 
-        {/* Responsive Mobile Menu Drawer Dropdown */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-[#111827] border-t border-white/5 mt-3 pt-3 flex flex-col gap-3 animate-fadeIn">
+          <div className="md:hidden bg-[#111827] border-t border-white/5 mt-3 pt-3 flex flex-col gap-3">
             <Link 
               href="/shop" 
               onClick={() => setIsMobileMenuOpen(false)}
@@ -135,9 +138,17 @@ export default function CustomerDashboardPage() {
       <section className="max-w-6xl mx-auto w-full p-4 sm:p-6 md:p-10 flex-1 space-y-8">
         
         {/* User Hero Greeting */}
-        <div className="border-b border-white/5 pb-4">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Welcome Back, {customerName}</h1>
-          <p className="text-gray-400 text-xs sm:text-sm mt-1">Monitor your continuous account orders, fulfillment updates, and secure payment logs.</p>
+        <div className="border-b border-white/5 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Welcome Back, {customerName}</h1>
+            <p className="text-gray-400 text-xs sm:text-sm mt-1">Monitor your continuous account orders, fulfillment updates, and secure payment logs.</p>
+          </div>
+          {customerEmail && (
+            <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 self-start sm:self-center">
+              <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider block">Account Email</span>
+              <span className="text-xs font-mono text-gray-300 block mt-0.5">{customerEmail}</span>
+            </div>
+          )}
         </div>
 
         {/* ACCOUNT INSIGHT CARDS */}
@@ -199,7 +210,6 @@ export default function CustomerDashboardPage() {
                 return (
                   <div key={order._id} className="bg-[#111827] border border-white/10 rounded-2xl p-5 sm:p-6 shadow-xl space-y-6">
                     
-                    {/* Voucher Summary Segment */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-white/5 pb-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -220,16 +230,13 @@ export default function CustomerDashboardPage() {
                       </div>
                     </div>
 
-                    {/* LIVE VISUAL TRACKER STEPPER */}
                     <div className="relative w-full py-2">
                       <div className="absolute top-[17px] left-4 right-4 h-0.5 bg-white/10 -z-0" />
-                      {/* Active green track bar fill if order is Dispatched */}
                       {order.status === "Dispatched" && (
                         <div className="absolute top-[17px] left-4 right-4 h-0.5 bg-green-500 -z-0 transition-all duration-500" />
                       )}
 
                       <div className="flex justify-between items-start relative z-10">
-                        {/* Step 1: Confirmed / Pending */}
                         <div className="flex flex-col items-center text-center max-w-[100px]">
                           <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-xs border-4 border-[#111827]">
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor">
@@ -240,7 +247,6 @@ export default function CustomerDashboardPage() {
                           <span className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">{order.paymentMethod}</span>
                         </div>
 
-                        {/* Step 2: Dispatched */}
                         <div className="flex flex-col items-center text-center max-w-[100px]">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-4 border-[#111827] transition-all duration-300 ${
                             order.status === "Dispatched" 
@@ -269,7 +275,6 @@ export default function CustomerDashboardPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="border-t border-white/5 bg-[#111827] py-6 text-center text-xs text-gray-500 mt-auto">
         &copy; 2026 AUTOGENIUS Automotive Hub. All Rights Reserved.
       </footer>

@@ -6,8 +6,9 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Restrict authenticated users from accessing public authentication screens
+  // CHANGED: Redirect authenticated customers straight to their landing dashboard page
   if (token && (pathname.startsWith("/login") || pathname.startsWith("/register"))) {
-    return NextResponse.redirect(new URL("/shop", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
   
   if (adminToken && pathname.startsWith("/admin/login")) {
@@ -57,9 +58,9 @@ export const config = {
     "/login", 
     "/register", 
     "/admin/login",
-    "/admin/dashboard",       // ADDED: Catches the exact route root
-    "/admin/dashboard/:path*", // Catches any deeply nested management screens
-    "/dashboard",             // ADDED: Catches customer route root
+    "/admin/dashboard",       
+    "/admin/dashboard/:path*", 
+    "/dashboard",             
     "/dashboard/:path*", 
     "/checkout/:path*"
   ],

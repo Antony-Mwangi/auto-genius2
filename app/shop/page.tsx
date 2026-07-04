@@ -82,14 +82,30 @@ export default function ShopPage() {
   return (
     <main className="min-h-screen bg-[#0b0f14] text-white flex flex-col antialiased font-sans">
       
-      {/* GLOBAL SHOP NAVIGATION HEADER */}
+      {/* GLOBAL APPLICATION HEADER */}
       <header className="border-b border-white/10 bg-[#111827] px-4 sm:px-6 py-4 sticky top-0 z-40 shadow-md">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-          <Link href="/shop" className="text-xl font-black text-orange-500 tracking-wider shrink-0">
-            AUTOGENIUS
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/shop" className="text-xl font-black text-orange-500 tracking-wider shrink-0">
+              AUTOGENIUS
+            </Link>
+            <span className="hidden sm:inline-block text-xs bg-white/5 border border-white/10 text-gray-400 px-2.5 py-0.5 rounded-full font-bold">
+              Automotive Parts Hub
+            </span>
+          </div>
           
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
+            {/* Added: Direct path mapping linking customers straight to their active track matrix profile dashboard */}
+            <Link 
+              href="/dashboard"
+              className="text-xs font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white px-4 py-2.5 rounded-xl transition flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5 text-orange-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+              My Orders
+            </Link>
+
             <Link 
               href="/cart" 
               className="relative p-2.5 rounded-xl border border-white/10 bg-[#0b0f14] hover:border-orange-500/30 transition flex items-center gap-2 text-xs sm:text-sm font-bold"
@@ -203,6 +219,11 @@ export default function ShopPage() {
           </div>
         )}
       </section>
+
+      {/* GLOBAL APPLICATION FOOTER */}
+      <footer className="border-t border-white/5 bg-[#111827] py-6 text-center text-xs text-gray-500 mt-auto">
+        &copy; 2026 AUTOGENIUS Automotive Hub. All Rights Reserved.
+      </footer>
     </main>
   );
 }
