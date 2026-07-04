@@ -32,10 +32,14 @@ export async function POST(request: Request) {
       { expiresIn: "7d" } // Token expires in 7 days
     );
 
-    // 2. Build the response payload
+    // CHANGED: Establish target landing coordinates dynamically based on account permissions matrix
+    const targetDashboard = user.role === "admin" ? "/admin/dashboard" : "/dashboard";
+
+    // 2. Build the response payload including the dynamic redirect target
     const response = NextResponse.json(
       {
         message: "Login successful.",
+        redirectTo: targetDashboard,
         user: { id: user._id, fullName: user.fullName, email: user.email, role: user.role },
       },
       { status: 200 }

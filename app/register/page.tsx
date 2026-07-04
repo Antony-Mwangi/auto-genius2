@@ -59,9 +59,11 @@ export default function RegisterPage() {
       }
 
       setSuccess(true);
-      // Redirect to login after a brief pause
+      
+      // CHANGED: Redirect directly to customer dashboard page instead of /login
       setTimeout(() => {
-        router.push("/login");
+        router.push("/dashboard");
+        router.refresh();
       }, 2000);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
@@ -108,10 +110,10 @@ export default function RegisterPage() {
             <div className="rounded-2xl border border-orange-500/20 bg-white/5 p-6">
               <h3 className="font-semibold text-orange-400">Member Benefits</h3>
               <ul className="mt-5 space-y-3 text-gray-300">
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Save multiple delivery addresses</li>
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Track every order live</li>
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Faster future checkouts</li>
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Exclusive member discounts</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500 font-bold">✓</span> Save multiple delivery addresses</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500 font-bold">✓</span> Track every order live</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500 font-bold">✓</span> Faster future checkouts</li>
+                <li className="flex items-center gap-2"><span className="text-orange-500 font-bold">✓</span> Exclusive member discounts</li>
               </ul>
             </div>
           </div>
@@ -122,7 +124,7 @@ export default function RegisterPage() {
           <div className="w-full max-w-md">
             <div className="mb-10">
               <h2 className="text-4xl font-bold">Create Account</h2>
-              <p className="mt-3 text-gray-400">Register to start shopping genuine spare parts.</p>
+              <p className="mt-3 text-gray-400">Register to start tracking your automated purchases.</p>
             </div>
 
             {/* Error and Success states */}
@@ -133,7 +135,7 @@ export default function RegisterPage() {
             )}
             {success && (
               <div className="mb-6 rounded-xl bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-400">
-                Registration successful! Redirecting to sign in...
+                Registration successful! Routing securely to your personal dashboard...
               </div>
             )}
 
@@ -233,7 +235,7 @@ export default function RegisterPage() {
             </Link>
 
             <p className="mt-12 text-center text-sm text-gray-500">
-              © {new Date().getFullYear()} AUTOGENIUS Spare Parts LTD
+              © 2026 AUTOGENIUS Spare Parts LTD
             </p>
           </div>
         </div>

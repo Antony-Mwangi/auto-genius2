@@ -91,7 +91,7 @@ export default function HomePage() {
               href="/shop"
               className="text-center rounded-lg bg-orange-500 px-6 py-3 font-semibold shadow-lg shadow-orange-500/30 transition hover:bg-orange-400"
             >
-              Shop Now
+              Shop as a Guest
             </Link>
 
             <Link

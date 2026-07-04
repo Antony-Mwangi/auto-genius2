@@ -16,7 +16,7 @@ function LoginFormContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [callbackUrl, setCallbackUrl] = useState("/shop");
+  const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const target = searchParams.get("callbackUrl");
@@ -45,8 +45,11 @@ function LoginFormContent() {
 
       setSuccess(true);
       
+      // CHANGED: Prioritize the dynamic destination returned from the API route (e.g., /dashboard or /admin/dashboard)
+      const destination = data.redirectTo || callbackUrl || "/dashboard";
+
       setTimeout(() => {
-        router.push(callbackUrl);
+        router.push(destination);
         router.refresh();
       }, 1500);
     } catch (err: any) {
@@ -60,7 +63,7 @@ function LoginFormContent() {
     <div className="w-full max-w-md">
       <div className="mb-10 text-center lg:text-left">
         <h2 className="text-4xl font-bold">Welcome Back</h2>
-        <p className="mt-3 text-gray-400">Login to your account to continue shopping.</p>
+        <p className="mt-3 text-gray-400">Login to your account to continue.</p>
       </div>
 
       {error && (
@@ -70,7 +73,7 @@ function LoginFormContent() {
       )}
       {success && (
         <div className="mb-6 rounded-xl bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-400">
-          Login successful! Redirecting...
+          Login successful! Redirecting to your dashboard...
         </div>
       )}
 
@@ -191,7 +194,7 @@ export default function LoginPage() {
 
         {/* RIGHT SIDE */}
         <div className="flex items-center justify-center px-6 py-12">
-          <Suspense fallback={<div className="text-gray-400">Loading checkout details...</div>}>
+          <Suspense fallback={<div className="text-gray-400">Loading tracking metadata...</div>}>
             <LoginFormContent />
           </Suspense>
         </div>
