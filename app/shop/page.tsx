@@ -89,7 +89,7 @@ export default function ShopPage() {
             AUTOGENIUS
           </Link>
           
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center">
             <Link 
               href="/cart" 
               className="relative p-2.5 rounded-xl border border-white/10 bg-[#0b0f14] hover:border-orange-500/30 transition flex items-center gap-2 text-xs sm:text-sm font-bold"
@@ -103,13 +103,6 @@ export default function ShopPage() {
                   {cartCount}
                 </span>
               )}
-            </Link>
-            
-            <Link 
-              href="/admin/login" 
-              className="text-xs font-bold text-gray-400 hover:text-white border border-white/10 px-3 sm:px-4 py-2.5 rounded-xl bg-[#0b0f14] transition whitespace-nowrap"
-            >
-              Terminal Login
             </Link>
           </div>
         </div>
