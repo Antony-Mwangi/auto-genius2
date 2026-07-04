@@ -1,3 +1,4 @@
+
 import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Order from "@/models/Order";
@@ -19,26 +20,28 @@ async function getAuthPayload(request: NextRequest, tokenName: "token" | "admin_
   }
 }
 
-// ==================== POST: SAVE PERSONALIZED CUSTOMER ORDER ====================
+// ==================== POST: SAVE CUSTOMER / GUEST ORDER ====================
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
     
     const customerSession = await getAuthPayload(request, "token");
-    // FIXED: Ensured a consistent fallback check matching the identity matrix exactly
     const userId = customerSession ? (customerSession.id || customerSession._id) : null;
 
-    const { name, phone, paymentMethod, cart, total } = await request.json();
+    // ADDED: Accept email directly from the request payload
+    const { name, email, phone, paymentMethod, cart, total } = await request.json();
 
-    if (!name || !phone || !cart || cart.length === 0) {
-      return NextResponse.json({ message: "Validation parameters rejected." }, { status: 400 });
+    // Enforce email check alongside other validation requirements
+    if (!name || !email || !phone || !cart || cart.length === 0) {
+      return NextResponse.json({ message: "Validation parameters rejected. Missing fields." }, { status: 400 });
     }
 
     const itemsSummary = cart.map((item: any) => `${item.product.name} × ${item.quantity}`).join(", ");
 
     const newOrder = await Order.create({
-      user: userId, // Tied uniquely to this customer record instance
+      user: userId, // Will be stored as null if checked out as guest
       customerName: name,
+      customerEmail: email, // Saved securely for receipts and tracking
       phone,
       paymentMethod,
       itemsSummary,
@@ -69,16 +72,26 @@ export async function GET(request: NextRequest) {
 
     // 2. Personalized Customer View Isolation
     if (customerSession) {
-      // FIXED: Normalized ID selection logic to mirror POST route structure perfectly
       const customerId = customerSession.id || customerSession._id;
       
       if (!customerId) {
         return NextResponse.json({ message: "Malformed session payload context." }, { status: 400 });
       }
 
-      // Target orders belonging strictly to this user's unique identity profile matching context
       const userSpecificRecords = await Order.find({ user: customerId }).sort({ createdAt: -1 });
       return NextResponse.json(userSpecificRecords, { status: 200 });
+    }
+
+    // 3. Fallback tracking allowance for Guest confirmation states
+    // If a guest provides a direct checkout order id tracking query parameter, allow them to view it
+    const { searchParams } = new URL(request.url);
+    const targetOrderId = searchParams.get("orderId");
+    
+    if (targetOrderId) {
+      const targetGuestOrder = await Order.findById(targetOrderId);
+      if (targetGuestOrder) {
+        return NextResponse.json(targetGuestOrder, { status: 200 });
+      }
     }
 
     return NextResponse.json({ message: "Access unauthorized." }, { status: 401 });

@@ -6,7 +6,6 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Restrict authenticated users from accessing public authentication screens
-  // CHANGED: Redirect authenticated customers straight to their landing dashboard page
   if (token && (pathname.startsWith("/login") || pathname.startsWith("/register"))) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
@@ -40,10 +39,9 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 3. General protected paths requiring standard customer login sessions
-  const isProtectedPath = 
-    (pathname.startsWith("/dashboard") && !pathname.startsWith("/admin/dashboard")) || 
-    pathname.startsWith("/checkout");
+  // 3. Protected paths requiring standard customer login sessions
+  // REMOVED: pathname.startsWith("/checkout") to allow anonymous guest transactions safely
+  const isProtectedPath = pathname.startsWith("/dashboard") && !pathname.startsWith("/admin/dashboard");
 
   if (!token && isProtectedPath) {
     return NextResponse.redirect(new URL(`/login?callbackUrl=${pathname}`, request.url));
@@ -61,7 +59,6 @@ export const config = {
     "/admin/dashboard",       
     "/admin/dashboard/:path*", 
     "/dashboard",             
-    "/dashboard/:path*", 
-    "/checkout/:path*"
+    "/dashboard/:path*"
   ],
 };
