@@ -1,28 +1,14 @@
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  try {
-    const response = NextResponse.json(
-      { message: "Admin console session closed successfully." }, 
-      { status: 200 }
-    );
+  const response = NextResponse.json({ message: "Logged out" }, { status: 200 });
 
-    // Erase cookie storage instantly by forcing maxAge execution to 0 seconds
-    response.cookies.set({
-      name: "admin_token",
-      value: "",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 0, 
-      path: "/",
-    });
+  // Clear all possible auth cookies
+  const cookiesToClear = ["admin_token", "token", "session", "auth_token"];
+  
+  cookiesToClear.forEach(cookieName => {
+    response.cookies.delete(cookieName);
+  });
 
-    return response;
-  } catch (error) {
-    return NextResponse.json(
-      { message: "Failed to cleanly drop session state." }, 
-      { status: 500 }
-    );
-  }
+  return response;
 }

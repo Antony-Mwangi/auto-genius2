@@ -38,13 +38,23 @@ export default function CustomerDashboardPage() {
   }, [router]);
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      
+      if (res.ok) {
+        // 1. Clear local state immediately
+        setUser({ name: "", email: "" });
+        
+        // 2. Force Next.js to refresh server components/cookies
+        router.refresh(); 
+        
+        // 3. Redirect to login
+        router.replace("/login"); 
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
-
-  if (loading) {
-    return <main className="min-h-screen bg-[#0b0f14] flex items-center justify-center text-gray-500">Loading...</main>;
-  }
 
   return (
     <main className="min-h-screen bg-[#0b0f14] text-white flex flex-col font-sans overflow-x-hidden">
