@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Footer from "@/app/components/Footer";
 
 interface Product {
   _id: string;
@@ -82,7 +83,7 @@ export default function ShopPage() {
   return (
     <main className="min-h-screen bg-[#0b0f14] text-white flex flex-col antialiased font-sans">
       
-      {/* GLOBAL APPLICATION HEADER */}
+      {/* HEADER */}
       <header className="border-b border-white/10 bg-[#111827] px-4 sm:px-6 py-4 sticky top-0 z-40 shadow-md">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -95,7 +96,6 @@ export default function ShopPage() {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Added: Direct path mapping linking customers straight to their active track matrix profile dashboard */}
             <Link 
               href="/dashboard"
               className="text-xs font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white px-4 py-2.5 rounded-xl transition flex items-center gap-1.5"
@@ -124,7 +124,7 @@ export default function ShopPage() {
         </div>
       </header>
 
-      {/* VIEW HERO HEADER & RUNTIME HORIZONTAL FILTERS */}
+      {/* HERO & FILTERS */}
       <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-8 sm:pt-12 pb-4">
         <div>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">Genuine Spare Parts Catalog</h1>
@@ -150,7 +150,7 @@ export default function ShopPage() {
         )}
       </section>
 
-      {/* CATALOG CORE GRID LAYOUT */}
+      {/* CATALOG GRID */}
       <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-16 flex-1 flex flex-col justify-start">
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-gray-400">
@@ -163,9 +163,6 @@ export default function ShopPage() {
         
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-xs font-bold my-6 flex items-center gap-2 max-w-md mx-auto w-full">
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-            </svg>
             <span>Runtime Failure: {error}</span>
           </div>
         )}
@@ -174,56 +171,33 @@ export default function ShopPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mt-4">
             {filteredProducts.map((item) => (
               <div key={item._id} className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden flex flex-col justify-between shadow-xl transition-all duration-200 hover:border-white/20 group">
-                
                 <div className="aspect-square w-full relative bg-[#0b0f14] overflow-hidden">
-                  <img 
-                    src={item.imageUrl} 
-                    alt={item.name} 
-                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105" 
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80"; }} 
-                  />
+                  <img src={item.imageUrl} alt={item.name} className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105" />
                   <span className="absolute top-3 left-3 bg-[#0b0f14]/90 text-[9px] font-black text-orange-400 border border-orange-500/20 px-2.5 py-1 rounded-md uppercase tracking-wider">
                     {item.category}
                   </span>
                 </div>
-                
                 <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 gap-4">
                   <h3 className="font-bold text-sm sm:text-base text-white line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem]">
                     {item.name}
                   </h3>
-                  
                   <div className="flex items-center justify-between pt-3 border-t border-white/5 gap-2">
                     <span className="text-base sm:text-lg font-black text-white whitespace-nowrap">
                       Ksh {item.price.toLocaleString()}
                     </span>
-                    <button 
-                      onClick={() => addToCart(item)} 
-                      className="bg-orange-500 hover:bg-orange-400 text-white text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-md shadow-orange-500/5 cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                      </svg>
+                    <button onClick={() => addToCart(item)} className="bg-orange-500 hover:bg-orange-400 text-white text-xs font-extrabold px-3 py-2 rounded-xl transition shadow-md shadow-orange-500/5 cursor-pointer flex items-center gap-1.5 whitespace-nowrap">
                       Add
                     </button>
                   </div>
                 </div>
-
               </div>
             ))}
           </div>
         )}
-
-        {!loading && !error && filteredProducts.length === 0 && (
-          <div className="text-center py-20 bg-[#111827] border border-white/10 rounded-2xl text-gray-400 text-sm font-medium">
-            No active spare components indexed under this category assignment.
-          </div>
-        )}
       </section>
 
-      {/* GLOBAL APPLICATION FOOTER */}
-      <footer className="border-t border-white/5 bg-[#111827] py-6 text-center text-xs text-gray-500 mt-auto">
-        &copy; 2026 AUTOGENIUS Automotive Hub. All Rights Reserved.
-      </footer>
+      {/* FOOTER */}
+      <Footer />
     </main>
   );
 }
