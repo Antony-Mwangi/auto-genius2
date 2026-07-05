@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, Mail, ShieldCheck, ArrowRight, Settings } from "lucide-react";
+import { User, Mail, ShieldCheck, ArrowRight, Settings, LogOut } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 
@@ -34,18 +34,38 @@ export default function CustomerDashboardPage() {
     fetchProfile();
   }, [router]);
 
+  // LOGOUT HANDLER
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh(); // Ensure session state clears
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  if (loading) return <div className="min-h-screen bg-[#0b0f14] flex items-center justify-center text-white">Loading...</div>;
+
   return (
     <main className="min-h-screen bg-[#0b0f14] text-white flex flex-col font-sans">
-      
       <Navbar />
 
       {/* DASHBOARD CONTENT */}
       <section className="max-w-5xl mx-auto w-full p-6 md:p-12 space-y-10 flex-grow">
         
         {/* HERO SECTION */}
-        <div>
-          <h1 className="text-3xl font-extrabold">Welcome, {customerName}</h1>
-          <p className="text-gray-400 mt-2">Manage your account preferences and secure profile settings below.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold">Welcome, {customerName}</h1>
+            <p className="text-gray-400 mt-2">Manage your account preferences and settings.</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all font-semibold"
+          >
+            <LogOut size={18} /> Sign Out
+          </button>
         </div>
 
         {/* ACCOUNT CARDS */}
@@ -62,7 +82,7 @@ export default function CustomerDashboardPage() {
             <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400"><Mail size={24} /></div>
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase">Account Email</p>
-              <p className="font-bold text-lg font-mono">{customerEmail || "Loading..."}</p>
+              <p className="font-bold text-lg font-mono">{customerEmail}</p>
             </div>
           </div>
         </div>
