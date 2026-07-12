@@ -151,6 +151,8 @@ import {
   Hash,
   Shield,
   Eye,
+  Home,
+  HelpCircle,
 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
@@ -250,26 +252,21 @@ export default function CustomerDashboardPage() {
       const data = await res.json();
       const ordersArray = Array.isArray(data) ? data : [];
 
-      // SECURITY: Verify all orders belong to the logged-in user
       const userEmail = user.email.toLowerCase();
       const verifiedOrders = ordersArray.filter((order: Order) => {
-        // Admin can see all orders
         if (user.role === "admin") return true;
-        
-        // Customer orders must match their email OR have their user ID
-        const belongsToUser = 
+        const belongsToUser =
           order.user === user.id ||
           order.customerEmail?.toLowerCase() === userEmail;
-        
+
         if (!belongsToUser) {
           console.warn(`⚠️ Security: Order ${order._id} does not belong to user ${userEmail}`);
           setSecurityAlert(`Found an order that doesn't belong to you. This has been blocked.`);
         }
-        
+
         return belongsToUser;
       });
 
-      // SECURITY: Log any potential security issues
       if (verifiedOrders.length < ordersArray.length) {
         const blockedCount = ordersArray.length - verifiedOrders.length;
         console.error(`🚨 SECURITY: Blocked ${blockedCount} orders from showing to user ${userEmail}`);
@@ -430,7 +427,6 @@ export default function CustomerDashboardPage() {
     return formatDate(dateString);
   };
 
-  // Verify an order belongs to the user (client-side validation)
   const verifyOrderOwnership = (order: Order): boolean => {
     if (user.role === "admin") return true;
     const userEmail = user.email.toLowerCase();
@@ -456,90 +452,91 @@ export default function CustomerDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0f14] text-white flex flex-col font-sans overflow-x-hidden">
+    <main className="min-h-screen bg-gradient-to-b from-[#0b0f14] to-[#131a24] text-white flex flex-col font-sans overflow-x-hidden">
       <Navbar />
 
-      <section className="flex-grow w-full max-w-5xl mx-auto px-4 py-8 md:px-6 md:py-12 space-y-8">
-        {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white">
-              Welcome back, {user.fullName.split(" ")[0]} 👋
+      <section className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        {/* ===== HEADER SECTION ===== */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/5">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white truncate">
+              Welcome back, <span className="text-orange-400">{user.fullName.split(" ")[0]}</span> 👋
             </h1>
             <p className="text-gray-400 text-sm mt-1">
               Manage your account, track orders, and view purchase history.
             </p>
             {user.role === "admin" && (
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-md mt-1">
-                <Shield size={12} /> Admin Access - Viewing All Orders
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-400 bg-orange-500/10 px-3 py-1 rounded-full mt-2 border border-orange-500/20">
+                <Shield size={14} /> Admin Access - Viewing All Orders
               </span>
             )}
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-colors w-full sm:w-auto disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
             >
-              <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
+              <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
               {refreshing ? "Refreshing..." : "Refresh"}
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 text-sm font-medium whitespace-nowrap"
             >
-              <LogOut size={18} /> Sign Out
+              <LogOut size={16} /> Sign Out
             </button>
           </div>
         </div>
 
-        {/* Security Alert */}
-        {securityAlert && (
-          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 flex items-start gap-3">
-            <Shield size={20} className="text-yellow-400 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-yellow-400 text-sm font-medium">{securityAlert}</p>
-              <button
-                onClick={() => setSecurityAlert(null)}
-                className="text-yellow-400 text-xs font-bold underline mt-1 hover:text-yellow-300"
-              >
-                Dismiss
-              </button>
+        {/* ===== ALERTS ===== */}
+        <div className="space-y-3 pt-4">
+          {securityAlert && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex items-start gap-3">
+              <Shield size={18} className="text-yellow-400 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-yellow-400 text-sm font-medium">{securityAlert}</p>
+                <button
+                  onClick={() => setSecurityAlert(null)}
+                  className="text-yellow-400/70 text-xs font-medium underline mt-1 hover:text-yellow-300 transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle size={20} className="text-red-400 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-red-400 text-sm font-medium">{error}</p>
-              <button
-                onClick={handleRefresh}
-                className="text-red-400 text-xs font-bold underline mt-1 hover:text-red-300"
-              >
-                Try again
-              </button>
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-red-400 text-sm font-medium">{error}</p>
+                <button
+                  onClick={handleRefresh}
+                  className="text-red-400/70 text-xs font-medium underline mt-1 hover:text-red-300 transition-colors"
+                >
+                  Try again
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* INFO CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-[#111827] border border-white/10 p-5 rounded-2xl flex items-center gap-4 hover:border-orange-500/20 transition-colors">
+        {/* ===== INFO CARDS ===== */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-6">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 flex items-center gap-4 hover:border-orange-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5">
             <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400 shrink-0">
-              <User size={22} />
+              <User size={20} />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Name</p>
-              <p className="font-bold truncate">{user.fullName}</p>
+              <p className="font-bold truncate text-sm">{user.fullName}</p>
             </div>
           </div>
 
-          <div className="bg-[#111827] border border-white/10 p-5 rounded-2xl flex items-center gap-4 hover:border-orange-500/20 transition-colors">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 flex items-center gap-4 hover:border-orange-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5">
             <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400 shrink-0">
-              <Mail size={22} />
+              <Mail size={20} />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</p>
@@ -547,9 +544,9 @@ export default function CustomerDashboardPage() {
             </div>
           </div>
 
-          <div className="bg-[#111827] border border-white/10 p-5 rounded-2xl flex items-center gap-4 hover:border-orange-500/20 transition-colors">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 flex items-center gap-4 hover:border-orange-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5">
             <div className="p-3 bg-green-500/10 rounded-xl text-green-400 shrink-0">
-              <Eye size={22} />
+              <Eye size={20} />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Verified Orders</p>
@@ -558,40 +555,40 @@ export default function CustomerDashboardPage() {
           </div>
         </div>
 
-        {/* ORDER SUMMARY STATS */}
+        {/* ===== ORDER SUMMARY STATS ===== */}
         {orders.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6">
             {counts.pending > 0 && (
-              <div className="bg-[#111827] border border-orange-500/20 p-4 rounded-xl text-center hover:border-orange-500/40 transition-colors">
+              <div className="bg-[#111827] border border-orange-500/20 rounded-xl p-4 text-center hover:border-orange-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5">
                 <p className="text-2xl font-black text-orange-400">{counts.pending}</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pending</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Pending</p>
               </div>
             )}
             {counts.processed > 0 && (
-              <div className="bg-[#111827] border border-blue-500/20 p-4 rounded-xl text-center hover:border-blue-500/40 transition-colors">
+              <div className="bg-[#111827] border border-blue-500/20 rounded-xl p-4 text-center hover:border-blue-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5">
                 <p className="text-2xl font-black text-blue-400">{counts.processed}</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Processed</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Processed</p>
               </div>
             )}
             {counts.dispatched > 0 && (
-              <div className="bg-[#111827] border border-purple-500/20 p-4 rounded-xl text-center hover:border-purple-500/40 transition-colors">
+              <div className="bg-[#111827] border border-purple-500/20 rounded-xl p-4 text-center hover:border-purple-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5">
                 <p className="text-2xl font-black text-purple-400">{counts.dispatched}</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Dispatched</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Dispatched</p>
               </div>
             )}
             {counts.delivered > 0 && (
-              <div className="bg-[#111827] border border-green-500/20 p-4 rounded-xl text-center hover:border-green-500/40 transition-colors">
+              <div className="bg-[#111827] border border-green-500/20 rounded-xl p-4 text-center hover:border-green-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/5">
                 <p className="text-2xl font-black text-green-400">{counts.delivered}</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivered</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Delivered</p>
               </div>
             )}
           </div>
         )}
 
-        {/* ORDER HISTORY SECTION */}
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-bold flex items-center gap-2">
+        {/* ===== ORDER HISTORY ===== */}
+        <div className="pt-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
+            <h2 className="text-lg font-bold flex items-center gap-2.5">
               <Package size={20} className="text-orange-500" />
               Order History
               {orders.length > 0 && (
@@ -602,8 +599,8 @@ export default function CustomerDashboardPage() {
             </h2>
             {orders.length > 0 && (
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-green-400 flex items-center gap-1">
-                  <Shield size={10} /> Verified
+                <span className="text-[10px] text-green-400 flex items-center gap-1.5 bg-green-500/10 px-2.5 py-1 rounded-full">
+                  <Shield size={12} /> Verified
                 </span>
                 {lastUpdated && (
                   <span className="text-[10px] text-gray-500">
@@ -616,13 +613,12 @@ export default function CustomerDashboardPage() {
 
           {ordersLoading ? (
             <div className="bg-[#111827] border border-white/10 rounded-2xl p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
-              <p className="text-gray-400 mt-4">Loading your orders...</p>
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent"></div>
+              <p className="text-gray-400 mt-4 text-sm">Loading your orders...</p>
             </div>
           ) : orders.length > 0 ? (
             <div className="space-y-4">
               {orders.map((order) => {
-                // Double-check ownership before rendering (security)
                 if (!verifyOrderOwnership(order) && user.role !== "admin") {
                   console.warn(`🚨 Security: Skipping order ${order._id} - does not belong to user`);
                   return null;
@@ -636,18 +632,18 @@ export default function CustomerDashboardPage() {
                 return (
                   <div
                     key={order._id}
-                    className="bg-[#111827] border border-white/10 rounded-2xl p-5 hover:border-orange-500/20 transition-all duration-300"
+                    className="bg-[#111827] border border-white/10 rounded-2xl p-5 hover:border-orange-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                       {/* Order Info */}
-                      <div className="flex-1 space-y-3">
+                      <div className="flex-1 min-w-0 space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-[10px] sm:text-xs font-bold text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded border border-orange-500/20 flex items-center gap-1">
+                          <span className="font-mono text-[10px] sm:text-xs font-bold text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20 flex items-center gap-1.5">
                             <Hash size={12} />
                             #{order._id.substring(order._id.length - 6).toUpperCase()}
                           </span>
-                          <span className="text-xs text-gray-400 flex items-center gap-1">
-                            <Calendar size={12} />
+                          <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                            <Calendar size={13} />
                             {formatDate(order.createdAt)}
                           </span>
                           <span
@@ -656,7 +652,7 @@ export default function CustomerDashboardPage() {
                             {statusConfig.label}
                           </span>
                           {user.role === "admin" && order.user && (
-                            <span className="text-[8px] text-gray-500 bg-white/5 px-1.5 py-0.5 rounded">
+                            <span className="text-[8px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
                               User: {order.user.toString().slice(-6)}
                             </span>
                           )}
@@ -665,12 +661,12 @@ export default function CustomerDashboardPage() {
                         <p className="text-sm text-gray-300 line-clamp-2">{order.itemsSummary}</p>
 
                         <div className="flex flex-wrap items-center gap-4 text-xs">
-                          <span className="text-gray-400 flex items-center gap-1">
-                            <Phone size={12} />
+                          <span className="text-gray-400 flex items-center gap-1.5">
+                            <Phone size={13} />
                             <span className="text-gray-200 font-mono">{order.phone}</span>
                           </span>
-                          <span className="text-gray-400 flex items-center gap-1">
-                            <CreditCard size={12} />
+                          <span className="text-gray-400 flex items-center gap-1.5">
+                            <CreditCard size={13} />
                             <span
                               className={`font-bold ${
                                 order.paymentMethod === "M-Pesa"
@@ -686,7 +682,7 @@ export default function CustomerDashboardPage() {
                           </span>
                           <button
                             onClick={() => toggleOrderExpansion(order._id)}
-                            className="text-gray-400 hover:text-white transition-colors flex items-center gap-1 text-xs font-medium"
+                            className="text-gray-400 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-medium"
                           >
                             {isExpanded ? (
                               <>
@@ -702,7 +698,7 @@ export default function CustomerDashboardPage() {
 
                         {/* Progress Bar */}
                         <div className="w-full max-w-xs">
-                          <div className="flex justify-between text-[8px] text-gray-500 mb-1">
+                          <div className="flex justify-between text-[8px] text-gray-500 mb-1 px-0.5">
                             <span>Pending</span>
                             <span>Processed</span>
                             <span>Dispatched</span>
@@ -728,7 +724,7 @@ export default function CustomerDashboardPage() {
                           <p className={`text-xs font-bold ${statusConfig.color}`}>
                             {statusConfig.label}
                           </p>
-                          <p className="text-[10px] text-gray-500 hidden sm:block max-w-[150px]">
+                          <p className="text-[10px] text-gray-500 hidden sm:block max-w-[160px]">
                             {statusConfig.description}
                           </p>
                         </div>
@@ -742,7 +738,7 @@ export default function CustomerDashboardPage() {
                           <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                             Order Details
                           </h4>
-                          <div className="space-y-1 text-xs">
+                          <div className="space-y-1.5 text-xs">
                             <p className="flex justify-between">
                               <span className="text-gray-400">Order ID:</span>
                               <span className="font-mono text-white">{order._id}</span>
@@ -765,7 +761,7 @@ export default function CustomerDashboardPage() {
                           <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                             Payment & Status
                           </h4>
-                          <div className="space-y-1 text-xs">
+                          <div className="space-y-1.5 text-xs">
                             <p className="flex justify-between">
                               <span className="text-gray-400">Payment:</span>
                               <span
@@ -802,71 +798,65 @@ export default function CustomerDashboardPage() {
             </div>
           ) : (
             <div className="bg-[#111827] border border-white/10 rounded-2xl p-12 text-center">
-              <Package size={48} className="text-gray-600 mx-auto mb-4" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <Package size={32} className="text-orange-400" />
+              </div>
               <h3 className="text-lg font-bold text-white mb-2">No Orders Yet</h3>
-              <p className="text-gray-400 text-sm mb-6">
+              <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
                 You haven't placed any orders. Start shopping for quality spare parts now!
               </p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <a
-                  href="/shop"
-                  className="inline-block bg-orange-500 hover:bg-orange-400 text-white font-extrabold px-6 py-3 rounded-xl transition shadow-lg"
-                >
-                  Browse Spare Parts
-                </a>
-                {/* <a
-                  href="/categories"
-                  className="inline-block bg-white/5 hover:bg-white/10 text-white font-extrabold px-6 py-3 rounded-xl transition border border-white/10"
-                >
-                  View Categories
-                </a> */}
-              </div>
+              <a
+                href="/shop"
+                className="inline-block bg-orange-500 hover:bg-orange-400 text-white font-bold px-6 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40"
+              >
+                Browse Spare Parts
+              </a>
             </div>
           )}
         </div>
 
-        {/* QUICK ACTIONS */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold">Quick Actions</h2>
+        {/* ===== QUICK ACTIONS ===== */}
+        <div className="pt-8">
+          <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <a
               href="/shop"
-              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-orange-500/50 transition flex items-center justify-between group"
+              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-orange-500/50 transition-all duration-300 flex items-center justify-between group hover:shadow-lg hover:shadow-orange-500/5"
             >
               <span className="font-bold flex items-center gap-3">
-                <Settings size={20} className="text-orange-500" /> Browse Parts
+                <Settings size={18} className="text-orange-500" /> Browse Parts
               </span>
               <ArrowRight
-                size={20}
+                size={18}
                 className="text-gray-600 group-hover:text-white transition-colors"
               />
             </a>
 
             <a
               href="/shop"
-              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-green-500/50 transition flex items-center justify-between group"
+              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-green-500/50 transition-all duration-300 flex items-center justify-between group hover:shadow-lg hover:shadow-green-500/5"
             >
               <span className="font-bold flex items-center gap-3">
-                <ShoppingBag size={20} className="text-green-500" /> Shop Again
+                <ShoppingBag size={18} className="text-green-500" /> Shop Again
               </span>
               <ArrowRight
-                size={20}
+                size={18}
                 className="text-gray-600 group-hover:text-white transition-colors"
               />
             </a>
 
-            <button
-              onClick={() => window.location.href = "/about"}
-              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-blue-500/50 transition flex items-center justify-between group text-left"
+            <a
+              href="/about"
+              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-blue-500/50 transition-all duration-300 flex items-center justify-between group hover:shadow-lg hover:shadow-blue-500/5"
             >
               <span className="font-bold flex items-center gap-3">
-                <Info size={20} className="text-blue-500" /> Help & Support
+                <HelpCircle size={18} className="text-blue-500" /> Help & Support
               </span>
               <ArrowRight
-                size={20}
+                size={18}
                 className="text-gray-600 group-hover:text-white transition-colors"
               />
-            </button>
+            </a>
           </div>
         </div>
       </section>
