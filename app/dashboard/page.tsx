@@ -816,49 +816,71 @@ export default function CustomerDashboardPage() {
         </div>
 
         {/* ===== QUICK ACTIONS ===== */}
-        <div className="pt-8">
-          <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <a
-              href="/shop"
-              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-orange-500/50 transition-all duration-300 flex items-center justify-between group hover:shadow-lg hover:shadow-orange-500/5"
-            >
-              <span className="font-bold flex items-center gap-3">
-                <Settings size={18} className="text-orange-500" /> Browse Parts
-              </span>
-              <ArrowRight
-                size={18}
-                className="text-gray-600 group-hover:text-white transition-colors"
-              />
-            </a>
+       {/* ===== QUICK ACTIONS ===== */}
+<div className="pt-8">
+  <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
+  
+  {/* Fixed layout with consistent sizing */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {/* Action 1 - Browse Parts */}
+    <a
+      href="/shop"
+      className="group relative bg-[#111827] border border-white/10 rounded-2xl p-5 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/5 overflow-hidden min-h-[72px] flex items-center"
+    >
+      {/* Background glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:via-orange-500/0 group-hover:to-orange-500/5 transition-all duration-500" />
+      
+      <div className="flex items-center justify-between w-full relative z-10">
+        <span className="font-bold flex items-center gap-3 text-sm sm:text-base">
+          <Settings size={18} className="text-orange-500 shrink-0" /> 
+          <span className="truncate">Browse Parts</span>
+        </span>
+        <ArrowRight
+          size={18}
+          className="text-gray-600 group-hover:text-white transition-colors shrink-0 ml-4"
+        />
+      </div>
+    </a>
 
-            <a
-              href="/shop"
-              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-green-500/50 transition-all duration-300 flex items-center justify-between group hover:shadow-lg hover:shadow-green-500/5"
-            >
-              <span className="font-bold flex items-center gap-3">
-                <ShoppingBag size={18} className="text-green-500" /> Shop Again
-              </span>
-              <ArrowRight
-                size={18}
-                className="text-gray-600 group-hover:text-white transition-colors"
-              />
-            </a>
+    {/* Action 2 - Shop Again */}
+    <a
+      href="/shop"
+      className="group relative bg-[#111827] border border-white/10 rounded-2xl p-5 hover:border-green-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/5 overflow-hidden min-h-[72px] flex items-center"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-green-500/0 via-green-500/0 to-green-500/0 group-hover:from-green-500/5 group-hover:via-green-500/0 group-hover:to-green-500/5 transition-all duration-500" />
+      
+      <div className="flex items-center justify-between w-full relative z-10">
+        <span className="font-bold flex items-center gap-3 text-sm sm:text-base">
+          <ShoppingBag size={18} className="text-green-500 shrink-0" /> 
+          <span className="truncate">Shop Again</span>
+        </span>
+        <ArrowRight
+          size={18}
+          className="text-gray-600 group-hover:text-white transition-colors shrink-0 ml-4"
+        />
+      </div>
+    </a>
 
-            <a
-              href="/about"
-              className="bg-[#111827] border border-white/10 p-5 rounded-2xl hover:border-blue-500/50 transition-all duration-300 flex items-center justify-between group hover:shadow-lg hover:shadow-blue-500/5"
-            >
-              <span className="font-bold flex items-center gap-3">
-                <HelpCircle size={18} className="text-blue-500" /> Help & Support
-              </span>
-              <ArrowRight
-                size={18}
-                className="text-gray-600 group-hover:text-white transition-colors"
-              />
-            </a>
-          </div>
-        </div>
+    {/* Action 3 - Help & Support */}
+    <a
+      href="/about"
+      className="group relative bg-[#111827] border border-white/10 rounded-2xl p-5 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5 overflow-hidden min-h-[72px] flex items-center"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/0 group-hover:to-blue-500/5 transition-all duration-500" />
+      
+      <div className="flex items-center justify-between w-full relative z-10">
+        <span className="font-bold flex items-center gap-3 text-sm sm:text-base">
+          <HelpCircle size={18} className="text-blue-500 shrink-0" /> 
+          <span className="truncate">Help & Support</span>
+        </span>
+        <ArrowRight
+          size={18}
+          className="text-gray-600 group-hover:text-white transition-colors shrink-0 ml-4"
+        />
+      </div>
+    </a>
+  </div>
+</div>
       </section>
 
       <Footer />
