@@ -362,6 +362,7 @@ export default function AdminDashboardPage() {
 
             {/* PRODUCT INPUT FORM */}
          
+{/* PRODUCT INPUT FORM */}
 <form onSubmit={handleProductSubmit} className="bg-[#111827] border border-orange-500/10 rounded-2xl p-5 sm:p-8 space-y-5 shadow-xl relative">
   {isEditing && <div className="absolute top-0 left-0 right-0 h-1 bg-orange-500 rounded-t-2xl" />}
   
@@ -391,14 +392,17 @@ export default function AdminDashboardPage() {
     </div>
     <div>
       <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Category Assignment</label>
-      <input 
-        type="text" 
-        required 
-        placeholder="Brakes, Engine, Suspension" 
-        value={product.category} 
-        onChange={e => setProduct(prev => ({ ...prev, category: e.target.value }))} 
-        className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-3 outline-none text-sm font-bold text-white placeholder-gray-500 focus:border-orange-500 transition" 
-      />
+      <select
+        required
+        value={product.category}
+        onChange={e => setProduct(prev => ({ ...prev, category: e.target.value }))}
+        className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-3 outline-none text-sm font-bold text-white placeholder-gray-500 focus:border-orange-500 transition appearance-none cursor-pointer"
+      >
+        <option value="" className="text-gray-400">Select a category...</option>
+        <option value="Brakes" className="text-white">Brakes</option>
+        <option value="Engine" className="text-white">Engine</option>
+        <option value="Suspension" className="text-white">Suspension</option>
+      </select>
     </div>
   </div>
 
@@ -418,7 +422,6 @@ export default function AdminDashboardPage() {
     {productLoading ? "Syncing Operations..." : isEditing ? "Save Configuration Changes" : "Publish to Storefront"}
   </button>
 </form>
-
             {/* LIVE INVENTORY DATA CONTENT DISPLAY */}
             <div className="space-y-4 pt-2">
               <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({dbProducts.length})</h2>
