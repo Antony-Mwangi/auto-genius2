@@ -361,7 +361,7 @@ export default function AdminDashboardPage() {
             )}
 
             {/* PRODUCT INPUT FORM */}
-          // PRODUCT INPUT FORM - Updated with dark background for inputs
+         
 <form onSubmit={handleProductSubmit} className="bg-[#111827] border border-orange-500/10 rounded-2xl p-5 sm:p-8 space-y-5 shadow-xl relative">
   {isEditing && <div className="absolute top-0 left-0 right-0 h-1 bg-orange-500 rounded-t-2xl" />}
   
