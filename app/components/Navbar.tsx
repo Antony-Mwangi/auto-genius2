@@ -15,11 +15,31 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <nav className="flex flex-wrap gap-4 sm:gap-6 text-sm justify-start md:justify-end">
-          <Link className="hover:text-orange-400 transition" href="/shop">Shop</Link>
-          <Link className="hover:text-orange-400 transition" href="/login">Login</Link>
-          <Link className="rounded-lg bg-orange-500 px-4 py-2 font-semibold transition hover:bg-orange-400" href="/register">Register</Link>
-          <Link className="hover:text-orange-400 transition" href="/about">About-us</Link>
+        <nav className="flex flex-wrap items-center gap-3 sm:gap-5 text-sm justify-start md:justify-end">
+          <Link 
+            className="text-gray-300 hover:text-white transition-colors duration-200 font-medium px-3 py-1.5 rounded-md hover:bg-white/5" 
+            href="/shop"
+          >
+            Shop
+          </Link>
+          <Link 
+            className="text-gray-300 hover:text-white transition-colors duration-200 font-medium px-3 py-1.5 rounded-md hover:bg-white/5" 
+            href="/login"
+          >
+            Login
+          </Link>
+          <Link 
+            className="text-gray-300 hover:text-white transition-colors duration-200 font-medium px-3 py-1.5 rounded-md hover:bg-white/5" 
+            href="/register"
+          >
+            Register
+          </Link>
+          <Link 
+            className="text-gray-300 hover:text-white transition-colors duration-200 font-medium px-3 py-1.5 rounded-md hover:bg-white/5" 
+            href="/about"
+          >
+            About Us
+          </Link>
         </nav>
       </div>
     </header>
