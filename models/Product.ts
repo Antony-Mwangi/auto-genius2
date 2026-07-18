@@ -18,6 +18,21 @@
 //       required: true, 
 //       trim: true 
 //     },
+//     // NEW: Chassis number - essential for customer searches
+//     chassisNumber: { 
+//       type: String, 
+//       required: true, 
+//       unique: true,
+//       trim: true,
+//       index: true // Creates index for faster searches
+//     },
+//     // NEW: Product description
+//     description: { 
+//       type: String, 
+//       required: false,
+//       default: "",
+//       trim: true 
+//     },
 //     imageUrl: { 
 //       type: String, 
 //       required: true 
@@ -52,11 +67,14 @@
 //   }
 // );
 
-// // Add index for better query performance
+// // Add indexes for better query performance
 // ProductSchema.index({ name: 1, category: 1 });
+// ProductSchema.index({ chassisNumber: 1 }); // Already indexed above, but keeping for clarity
+// ProductSchema.index({ chassisNumber: 'text', name: 'text', description: 'text' }); // Text search index
 
 // // Gracefully handles Next.js compilation re-imports without recreating the model
 // export default models.Product || model("Product", ProductSchema);
+
 
 
 
@@ -78,15 +96,16 @@ const ProductSchema = new Schema(
       required: true, 
       trim: true 
     },
-    // NEW: Chassis number - essential for customer searches
+    // Chassis number - now optional
     chassisNumber: { 
       type: String, 
-      required: true, 
+      required: false,
       unique: true,
+      sparse: true, // Allows multiple null values while maintaining uniqueness for non-null values
       trim: true,
       index: true // Creates index for faster searches
     },
-    // NEW: Product description
+    // Product description
     description: { 
       type: String, 
       required: false,
@@ -129,8 +148,14 @@ const ProductSchema = new Schema(
 
 // Add indexes for better query performance
 ProductSchema.index({ name: 1, category: 1 });
-ProductSchema.index({ chassisNumber: 1 }); // Already indexed above, but keeping for clarity
-ProductSchema.index({ chassisNumber: 'text', name: 'text', description: 'text' }); // Text search index
+// Index for chassis number with sparse option (allows null values)
+ProductSchema.index({ chassisNumber: 1 }, { sparse: true });
+// Text search index for searching across multiple fields
+ProductSchema.index({ 
+  chassisNumber: 'text', 
+  name: 'text', 
+  description: 'text' 
+});
 
 // Gracefully handles Next.js compilation re-imports without recreating the model
 export default models.Product || model("Product", ProductSchema);
