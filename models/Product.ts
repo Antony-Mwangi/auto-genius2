@@ -1,5 +1,4 @@
 
-
 // import mongoose, { Schema, model, models } from "mongoose";
 
 // const ProductSchema = new Schema(
@@ -18,15 +17,16 @@
 //       required: true, 
 //       trim: true 
 //     },
-//     // NEW: Chassis number - essential for customer searches
+//     // Chassis number - now optional
 //     chassisNumber: { 
 //       type: String, 
-//       required: true, 
+//       required: false,
 //       unique: true,
+//       sparse: true, // Allows multiple null values while maintaining uniqueness for non-null values
 //       trim: true,
 //       index: true // Creates index for faster searches
 //     },
-//     // NEW: Product description
+//     // Product description
 //     description: { 
 //       type: String, 
 //       required: false,
@@ -69,12 +69,17 @@
 
 // // Add indexes for better query performance
 // ProductSchema.index({ name: 1, category: 1 });
-// ProductSchema.index({ chassisNumber: 1 }); // Already indexed above, but keeping for clarity
-// ProductSchema.index({ chassisNumber: 'text', name: 'text', description: 'text' }); // Text search index
+// // Index for chassis number with sparse option (allows null values)
+// ProductSchema.index({ chassisNumber: 1 }, { sparse: true });
+// // Text search index for searching across multiple fields
+// ProductSchema.index({ 
+//   chassisNumber: 'text', 
+//   name: 'text', 
+//   description: 'text' 
+// });
 
 // // Gracefully handles Next.js compilation re-imports without recreating the model
 // export default models.Product || model("Product", ProductSchema);
-
 
 
 
@@ -96,16 +101,14 @@ const ProductSchema = new Schema(
       required: true, 
       trim: true 
     },
-    // Chassis number - now optional
     chassisNumber: { 
       type: String, 
       required: false,
       unique: true,
-      sparse: true, // Allows multiple null values while maintaining uniqueness for non-null values
+      sparse: true,
       trim: true,
-      index: true // Creates index for faster searches
+      index: true
     },
-    // Product description
     description: { 
       type: String, 
       required: false,
@@ -116,7 +119,46 @@ const ProductSchema = new Schema(
       type: String, 
       required: true 
     },
-    // Optional: Store Cloudinary metadata for better management
+    
+    // ============ INVENTORY MANAGEMENT FIELDS ============
+    quantity: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0
+    },
+    supplierAvailable: {
+      type: Boolean,
+      default: false
+    },
+    supplierName: {
+      type: String,
+      required: false,
+      trim: true
+    },
+    supplierDeliveryTime: {
+      type: String,
+      required: false,
+      default: "10-21 business days"
+    },
+    supplierShippingCost: {
+      type: Number,
+      required: false,
+      default: 0,
+      min: 0
+    },
+    restockDate: {
+      type: Date,
+      required: false
+    },
+    lowStockThreshold: {
+      type: Number,
+      required: false,
+      default: 5,
+      min: 0
+    },
+    // =====================================================
+    
     cloudinaryPublicId: { 
       type: String, 
       required: false 
@@ -130,7 +172,6 @@ const ProductSchema = new Schema(
       },
       required: false,
     },
-    // Optional: Store multiple image variants
     images: {
       type: [{
         url: String,
@@ -142,20 +183,92 @@ const ProductSchema = new Schema(
     },
   },
   { 
-    timestamps: true 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
 
-// Add indexes for better query performance
+// ============ VIRTUAL PROPERTIES ============
+
+// Derived availability status
+ProductSchema.virtual('availabilityStatus').get(function() {
+  if (this.quantity > 0) {
+    return 'IN_STOCK';
+  } else if (this.supplierAvailable) {
+    return 'INTERNATIONAL_SUPPLIER';
+  } else {
+    return 'OUT_OF_STOCK';
+  }
+});
+
+// Human-readable availability display
+ProductSchema.virtual('availabilityDisplay').get(function() {
+  let status;
+  
+  if (this.quantity > 0) {
+    status = 'IN_STOCK';
+  } else if (this.supplierAvailable) {
+    status = 'INTERNATIONAL_SUPPLIER';
+  } else {
+    status = 'OUT_OF_STOCK';
+  }
+  
+  if (status === 'IN_STOCK') {
+    return {
+      status: 'In Stock',
+      badgeColor: 'green',
+      icon: '✅',
+      message: `Available for immediate purchase`,
+      quantity: this.quantity,
+      deliveryEstimate: '1-3 business days',
+      isLowStock: this.quantity <= (this.lowStockThreshold || 5),
+      lowStockThreshold: this.lowStockThreshold || 5
+    };
+  } else if (status === 'INTERNATIONAL_SUPPLIER') {
+    return {
+      status: 'Available from International Supplier',
+      badgeColor: 'blue',
+      icon: '🌍',
+      message: `Can be ordered on request${this.supplierName ? ` from ${this.supplierName}` : ''}`,
+      supplierName: this.supplierName,
+      deliveryEstimate: this.supplierDeliveryTime || '10-21 business days',
+      shippingCost: this.supplierShippingCost || 0
+    };
+  } else {
+    return {
+      status: 'Out of Stock',
+      badgeColor: 'red',
+      icon: '❌',
+      message: 'Currently unavailable for purchase',
+      restockDate: this.restockDate,
+      restockMessage: this.restockDate ? `Expected restock: ${new Date(this.restockDate).toLocaleDateString()}` : 'Check back soon'
+    };
+  }
+});
+
+// Check if product can be purchased
+ProductSchema.virtual('isPurchasable').get(function() {
+  return this.quantity > 0 || this.supplierAvailable;
+});
+
+// Check if product is low stock
+ProductSchema.virtual('isLowStock').get(function() {
+  return this.quantity > 0 && this.quantity <= (this.lowStockThreshold || 5);
+});
+
+// ============ INDEXES ============
+
 ProductSchema.index({ name: 1, category: 1 });
-// Index for chassis number with sparse option (allows null values)
 ProductSchema.index({ chassisNumber: 1 }, { sparse: true });
-// Text search index for searching across multiple fields
+ProductSchema.index({ quantity: 1 });
+ProductSchema.index({ supplierAvailable: 1 });
 ProductSchema.index({ 
   chassisNumber: 'text', 
   name: 'text', 
   description: 'text' 
 });
 
-// Gracefully handles Next.js compilation re-imports without recreating the model
+// ============ EXPORT ============
+
 export default models.Product || model("Product", ProductSchema);

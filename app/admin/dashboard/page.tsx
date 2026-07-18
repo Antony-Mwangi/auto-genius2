@@ -1,5 +1,6 @@
 
 
+
 // "use client";
 
 // import { useState, useEffect } from "react";
@@ -21,8 +22,8 @@
 //   name: string;
 //   price: number;
 //   category: string;
-//   chassisNumber: string;
-//   description: string;
+//   chassisNumber?: string | null;
+//   description?: string;
 //   imageUrl: string;
 // }
 
@@ -167,10 +168,11 @@
 //       return;
 //     }
 
-//     if (!product.chassisNumber.trim()) {
-//       setProductMessage({ text: "Chassis number is required.", isError: true });
-//       return;
-//     }
+//     // Remove the chassis number validation - it's now optional
+//     // if (!product.chassisNumber.trim()) {
+//     //   setProductMessage({ text: "Chassis number is required.", isError: true });
+//     //   return;
+//     // }
 
 //     setProductLoading(true);
 //     setProductMessage(null);
@@ -179,7 +181,10 @@
 //     data.append("name", product.name);
 //     data.append("price", product.price);
 //     data.append("category", product.category);
-//     data.append("chassisNumber", product.chassisNumber.trim());
+//     // Only append chassisNumber if it has a value
+//     if (product.chassisNumber && product.chassisNumber.trim()) {
+//       data.append("chassisNumber", product.chassisNumber.trim());
+//     }
 //     data.append("description", product.description.trim());
 //     if (product.id) data.append("id", product.id);
 //     if (product.imageFile) data.append("image", product.imageFile);
@@ -398,21 +403,22 @@
 //                 />
 //               </div>
 
-//               {/* Chassis Number - New Field */}
+//               {/* Chassis Number - Now Optional */}
 //               <div>
-//                 <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Chassis Number <span className="text-orange-400">*</span></label>
+//                 <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
+//                   Chassis Number <span className="text-gray-500 text-[10px]">(Optional)</span>
+//                 </label>
 //                 <input 
 //                   type="text" 
-//                   required 
-//                   placeholder="e.g., JTEBU17F780123456" 
+//                   placeholder="e.g., JTEBU17F780123456 (optional)" 
 //                   value={product.chassisNumber} 
 //                   onChange={e => setProduct(prev => ({ ...prev, chassisNumber: e.target.value }))} 
 //                   className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-3 outline-none text-sm font-bold text-white placeholder-gray-500 focus:border-orange-500 transition font-mono" 
 //                 />
-//                 <p className="text-[10px] text-gray-500 mt-1">Unique identifier for customer searches</p>
+//                 <p className="text-[10px] text-gray-500 mt-1">Optional unique identifier for customer searches</p>
 //               </div>
 
-//               {/* Description - New Field */}
+//               {/* Description */}
 //               <div>
 //                 <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Product Description</label>
 //                 <textarea 
@@ -500,9 +506,13 @@
 //                               )}
 //                             </td>
 //                             <td className="p-4">
-//                               <span className="text-xs font-mono bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded-md font-bold">
-//                                 {item.chassisNumber}
-//                               </span>
+//                               {item.chassisNumber ? (
+//                                 <span className="text-xs font-mono bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-1 rounded-md font-bold">
+//                                   {item.chassisNumber}
+//                                 </span>
+//                               ) : (
+//                                 <span className="text-xs text-gray-500 italic">—</span>
+//                               )}
 //                             </td>
 //                             <td className="p-4"><span className="text-xs bg-white/5 text-orange-400 border border-white/10 px-2.5 py-0.5 rounded-md font-bold">{item.category}</span></td>
 //                             <td className="p-4 font-black text-white">Ksh {item.price.toLocaleString()}</td>
@@ -539,7 +549,11 @@
 //                         <img src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-xl border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
 //                         <div className="min-w-0 flex-1">
 //                           <h4 className="font-bold text-white text-sm line-clamp-2">{item.name}</h4>
-//                           <span className="text-[10px] font-mono text-orange-400 block truncate">#{item.chassisNumber}</span>
+//                           {item.chassisNumber ? (
+//                             <span className="text-[10px] font-mono text-orange-400 block truncate">#{item.chassisNumber}</span>
+//                           ) : (
+//                             <span className="text-[9px] text-gray-500 italic">No chassis number</span>
+//                           )}
 //                           {item.description && (
 //                             <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">{item.description}</p>
 //                           )}
@@ -720,8 +734,6 @@
 
 
 
-
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -735,6 +747,13 @@ interface ProductForm {
   category: string;
   chassisNumber: string;
   description: string;
+  quantity: number;
+  supplierAvailable: boolean;
+  supplierName: string;
+  supplierDeliveryTime: string;
+  supplierShippingCost: number;
+  restockDate: string;
+  lowStockThreshold: number;
   imageFile: File | null;
 }
 
@@ -746,6 +765,29 @@ interface DBProduct {
   chassisNumber?: string | null;
   description?: string;
   imageUrl: string;
+  quantity: number;
+  supplierAvailable: boolean;
+  supplierName?: string;
+  supplierDeliveryTime?: string;
+  supplierShippingCost?: number;
+  restockDate?: string;
+  lowStockThreshold?: number;
+  availabilityStatus?: string;
+  availabilityDisplay?: {
+    status: string;
+    badgeColor: string;
+    icon: string;
+    message: string;
+    quantity?: number;
+    deliveryEstimate?: string;
+    isLowStock?: boolean;
+    supplierName?: string;
+    shippingCost?: number;
+    restockDate?: string;
+    restockMessage?: string;
+  };
+  isPurchasable?: boolean;
+  isLowStock?: boolean;
 }
 
 type OrderStatus = "Pending" | "Processed" | "Dispatched" | "Delivered";
@@ -776,6 +818,13 @@ export default function AdminDashboardPage() {
     category: "",
     chassisNumber: "",
     description: "",
+    quantity: 0,
+    supplierAvailable: false,
+    supplierName: "",
+    supplierDeliveryTime: "10-21 business days",
+    supplierShippingCost: 0,
+    restockDate: "",
+    lowStockThreshold: 5,
     imageFile: null,
   });
   const [productLoading, setProductLoading] = useState(false);
@@ -861,6 +910,13 @@ export default function AdminDashboardPage() {
       category: item.category,
       chassisNumber: item.chassisNumber || "",
       description: item.description || "",
+      quantity: item.quantity || 0,
+      supplierAvailable: item.supplierAvailable || false,
+      supplierName: item.supplierName || "",
+      supplierDeliveryTime: item.supplierDeliveryTime || "10-21 business days",
+      supplierShippingCost: item.supplierShippingCost || 0,
+      restockDate: item.restockDate ? new Date(item.restockDate).toISOString().split('T')[0] : "",
+      lowStockThreshold: item.lowStockThreshold || 5,
       imageFile: null,
     });
     setProductMessage(null);
@@ -875,6 +931,13 @@ export default function AdminDashboardPage() {
       category: "", 
       chassisNumber: "",
       description: "",
+      quantity: 0,
+      supplierAvailable: false,
+      supplierName: "",
+      supplierDeliveryTime: "10-21 business days",
+      supplierShippingCost: 0,
+      restockDate: "",
+      lowStockThreshold: 5,
       imageFile: null 
     });
     setProductMessage(null);
@@ -889,12 +952,6 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    // Remove the chassis number validation - it's now optional
-    // if (!product.chassisNumber.trim()) {
-    //   setProductMessage({ text: "Chassis number is required.", isError: true });
-    //   return;
-    // }
-
     setProductLoading(true);
     setProductMessage(null);
 
@@ -902,11 +959,26 @@ export default function AdminDashboardPage() {
     data.append("name", product.name);
     data.append("price", product.price);
     data.append("category", product.category);
+    
     // Only append chassisNumber if it has a value
     if (product.chassisNumber && product.chassisNumber.trim()) {
       data.append("chassisNumber", product.chassisNumber.trim());
     }
     data.append("description", product.description.trim());
+    
+    // Inventory fields
+    data.append("quantity", product.quantity.toString());
+    data.append("supplierAvailable", product.supplierAvailable ? "true" : "false");
+    if (product.supplierAvailable) {
+      data.append("supplierName", product.supplierName);
+      data.append("supplierDeliveryTime", product.supplierDeliveryTime);
+      data.append("supplierShippingCost", product.supplierShippingCost.toString());
+    }
+    if (product.restockDate) {
+      data.append("restockDate", product.restockDate);
+    }
+    data.append("lowStockThreshold", product.lowStockThreshold.toString());
+    
     if (product.id) data.append("id", product.id);
     if (product.imageFile) data.append("image", product.imageFile);
 
@@ -995,6 +1067,55 @@ export default function AdminDashboardPage() {
     const flow: OrderStatus[] = ["Pending", "Processed", "Dispatched", "Delivered"];
     const index = flow.indexOf(status);
     return ((index + 1) / flow.length) * 100;
+  };
+
+  // Helper function to render availability badge
+  const getAvailabilityBadge = (item: DBProduct) => {
+    const display = item.availabilityDisplay || {
+      status: 'Unknown',
+      badgeColor: 'gray',
+      icon: '❓',
+      message: 'Availability unknown'
+    };
+
+    const colorMap = {
+      green: {
+        bg: 'bg-green-500/10',
+        border: 'border-green-500/20',
+        text: 'text-green-400',
+        dot: 'bg-green-500'
+      },
+      blue: {
+        bg: 'bg-blue-500/10',
+        border: 'border-blue-500/20',
+        text: 'text-blue-400',
+        dot: 'bg-blue-500'
+      },
+      red: {
+        bg: 'bg-red-500/10',
+        border: 'border-red-500/20',
+        text: 'text-red-400',
+        dot: 'bg-red-500'
+      },
+      gray: {
+        bg: 'bg-gray-500/10',
+        border: 'border-gray-500/20',
+        text: 'text-gray-400',
+        dot: 'bg-gray-500'
+      }
+    };
+
+    const colors = colorMap[display.badgeColor as keyof typeof colorMap] || colorMap.gray;
+
+    return (
+      <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold ${colors.text} ${colors.bg} ${colors.border} border px-2.5 py-1 rounded-md`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} ${display.badgeColor === 'green' ? 'animate-pulse' : ''}`}></span>
+        {display.icon} {display.status}
+        {item.isLowStock && (
+          <span className="text-[8px] text-yellow-400 ml-1">⚠️ Low Stock</span>
+        )}
+      </span>
+    );
   };
 
   return (
@@ -1150,6 +1271,129 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
+              {/* INVENTORY MANAGEMENT SECTION */}
+              <div className="border border-white/10 rounded-xl p-4 space-y-4">
+                <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M12 3.75v6.75m0 0l-3-3m3 3l3-3" />
+                  </svg>
+                  Inventory Management
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
+                      Stock Quantity
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      placeholder="0"
+                      value={product.quantity}
+                      onChange={e => setProduct(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
+                      className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-3 outline-none text-sm font-bold text-white focus:border-orange-500 transition"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1">Current quantity in local inventory</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
+                      Low Stock Threshold
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="5"
+                      value={product.lowStockThreshold}
+                      onChange={e => setProduct(prev => ({ ...prev, lowStockThreshold: parseInt(e.target.value) || 5 }))}
+                      className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-3 outline-none text-sm font-bold text-white focus:border-orange-500 transition"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1">Alert when stock falls below this number</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 pt-2">
+                  <label className="text-xs font-bold uppercase text-gray-400 tracking-wider">
+                    Available from Supplier
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setProduct(prev => ({ ...prev, supplierAvailable: !prev.supplierAvailable }))}
+                    className={`relative w-12 h-6 rounded-full transition ${product.supplierAvailable ? 'bg-blue-500' : 'bg-white/20'}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition ${product.supplierAvailable ? 'right-0.5' : 'left-0.5'}`} />
+                  </button>
+                  <span className="text-xs text-gray-400">
+                    {product.supplierAvailable ? 'Yes' : 'No'}
+                  </span>
+                </div>
+
+                {/* Supplier Details - Show when supplierAvailable is true */}
+                {product.supplierAvailable && (
+                  <div className="border border-blue-500/20 bg-blue-500/5 rounded-xl p-4 space-y-3">
+                    <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider">
+                      International Supplier Details
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">
+                          Supplier Name
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g., AutoParts Japan"
+                          value={product.supplierName}
+                          onChange={e => setProduct(prev => ({ ...prev, supplierName: e.target.value }))}
+                          className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">
+                          Delivery Time
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g., 10-21 business days"
+                          value={product.supplierDeliveryTime}
+                          onChange={e => setProduct(prev => ({ ...prev, supplierDeliveryTime: e.target.value }))}
+                          className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">
+                          Shipping Cost (Ksh)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={product.supplierShippingCost}
+                          onChange={e => setProduct(prev => ({ ...prev, supplierShippingCost: parseFloat(e.target.value) || 0 }))}
+                          className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Restock Date - Show when out of stock and no supplier */}
+                {product.quantity === 0 && !product.supplierAvailable && (
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
+                      Expected Restock Date
+                    </label>
+                    <input
+                      type="date"
+                      value={product.restockDate}
+                      onChange={e => setProduct(prev => ({ ...prev, restockDate: e.target.value }))}
+                      className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-3 outline-none text-sm text-white focus:border-orange-500 transition"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1">When will this product be available again?</p>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Retail Price (Ksh)</label>
@@ -1208,6 +1452,8 @@ export default function AdminDashboardPage() {
                         <th className="p-4">Asset Image</th>
                         <th className="p-4">Part Details</th>
                         <th className="p-4">Chassis</th>
+                        <th className="p-4">Availability</th>
+                        <th className="p-4">Stock</th>
                         <th className="p-4">Category</th>
                         <th className="p-4">Price</th>
                         <th className="p-4 text-right">Actions Matrix</th>
@@ -1235,6 +1481,24 @@ export default function AdminDashboardPage() {
                                 <span className="text-xs text-gray-500 italic">—</span>
                               )}
                             </td>
+                            <td className="p-4">
+                              <div className="flex flex-col gap-1">
+                                {getAvailabilityBadge(item)}
+                                {item.availabilityDisplay?.message && (
+                                  <span className="text-[9px] text-gray-500">{item.availabilityDisplay.message}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex flex-col">
+                                <span className={`font-bold ${item.quantity === 0 ? 'text-red-400' : item.quantity <= (item.lowStockThreshold || 5) ? 'text-yellow-400' : 'text-green-400'}`}>
+                                  {item.quantity}
+                                </span>
+                                {item.supplierAvailable && (
+                                  <span className="text-[9px] text-blue-400">+ Supplier</span>
+                                )}
+                              </div>
+                            </td>
                             <td className="p-4"><span className="text-xs bg-white/5 text-orange-400 border border-white/10 px-2.5 py-0.5 rounded-md font-bold">{item.category}</span></td>
                             <td className="p-4 font-black text-white">Ksh {item.price.toLocaleString()}</td>
                             <td className="p-4 text-right space-x-2 whitespace-nowrap">
@@ -1254,7 +1518,7 @@ export default function AdminDashboardPage() {
                           </tr>
                         ))
                       ) : (
-                        <tr><td colSpan={6} className="p-8 text-center text-gray-400">No registered physical components sitting inside the live MongoDB database cluster.</td></tr>
+                        <tr><td colSpan={8} className="p-8 text-center text-gray-400">No registered physical components sitting inside the live MongoDB database cluster.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -1266,7 +1530,7 @@ export default function AdminDashboardPage() {
                 {dbProducts.length > 0 ? (
                   dbProducts.map(item => (
                     <div key={item._id} className="bg-[#111827] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
-                      <div className="flex gap-3 items-center">
+                      <div className="flex gap-3 items-start">
                         <img src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-xl border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
                         <div className="min-w-0 flex-1">
                           <h4 className="font-bold text-white text-sm line-clamp-2">{item.name}</h4>
@@ -1281,8 +1545,15 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+                        {getAvailabilityBadge(item)}
                         <span className="text-xs bg-white/5 text-orange-400 border border-white/10 px-2 py-0.5 rounded-md font-bold">{item.category}</span>
                         <span className="text-sm font-black text-white ml-auto">Ksh {item.price.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-400">Stock: <span className={`font-bold ${item.quantity === 0 ? 'text-red-400' : 'text-white'}`}>{item.quantity}</span></span>
+                        {item.supplierAvailable && (
+                          <span className="text-blue-400">🌍 Supplier</span>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => startEditMode(item)} className="flex-1 text-xs font-bold px-3 py-2 rounded-xl border border-orange-500/20 bg-orange-500/10 text-orange-400 transition cursor-pointer flex items-center justify-center gap-1">

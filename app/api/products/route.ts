@@ -1,4 +1,5 @@
 
+
 // import { NextResponse } from "next/server";
 // import { connectDB } from "@/lib/db";
 // import Product from "@/models/Product";
@@ -60,21 +61,23 @@
 //     const description = formData.get("description") as string;
 //     const file = formData.get("image") as File | null;
 
-//     // Validate required fields
-//     if (!name || !price || !category || !chassisNumber || !file) {
+//     // Validate required fields - chassis number is now optional
+//     if (!name || !price || !category || !file) {
 //       return NextResponse.json(
-//         { message: "Missing required fields. Name, price, category, chassis number, and image are required." },
+//         { message: "Missing required fields. Name, price, category, and image are required. Chassis number is optional." },
 //         { status: 400 }
 //       );
 //     }
 
-//     // Check if chassis number already exists
-//     const existingProduct = await Product.findOne({ chassisNumber });
-//     if (existingProduct) {
-//       return NextResponse.json(
-//         { message: "A product with this chassis number already exists." },
-//         { status: 400 }
-//       );
+//     // Check if chassis number already exists (only if provided)
+//     if (chassisNumber && chassisNumber.trim()) {
+//       const existingProduct = await Product.findOne({ chassisNumber: chassisNumber.trim() });
+//       if (existingProduct) {
+//         return NextResponse.json(
+//           { message: "A product with this chassis number already exists." },
+//           { status: 400 }
+//         );
+//       }
 //     }
 
 //     // Convert file to buffer
@@ -105,7 +108,7 @@
 //       name,
 //       price: parseFloat(price),
 //       category,
-//       chassisNumber,
+//       chassisNumber: chassisNumber && chassisNumber.trim() ? chassisNumber.trim() : null,
 //       description: description || "",
 //       imageUrl,
 //       cloudinaryPublicId,
@@ -143,7 +146,8 @@
 //     const description = formData.get("description") as string;
 //     const file = formData.get("image") as File | null;
 
-//     if (!id || !name || !price || !category || !chassisNumber) {
+//     // Validate required fields - chassis number is now optional
+//     if (!id || !name || !price || !category) {
 //       return NextResponse.json(
 //         { message: "Missing required details to update item." },
 //         { status: 400 }
@@ -159,16 +163,20 @@
 //     }
 
 //     // Check if chassis number is being changed and if it already exists
-//     if (chassisNumber !== currentProduct.chassisNumber) {
-//       const existingProduct = await Product.findOne({ 
-//         chassisNumber, 
-//         _id: { $ne: id } 
-//       });
-//       if (existingProduct) {
-//         return NextResponse.json(
-//           { message: "Another product with this chassis number already exists." },
-//           { status: 400 }
-//         );
+//     const trimmedChassis = chassisNumber && chassisNumber.trim() ? chassisNumber.trim() : null;
+//     if (trimmedChassis !== currentProduct.chassisNumber) {
+//       // Only check uniqueness if a chassis number is provided
+//       if (trimmedChassis) {
+//         const existingProduct = await Product.findOne({ 
+//           chassisNumber: trimmedChassis, 
+//           _id: { $ne: id } 
+//         });
+//         if (existingProduct) {
+//           return NextResponse.json(
+//             { message: "Another product with this chassis number already exists." },
+//             { status: 400 }
+//           );
+//         }
 //       }
 //     }
 
@@ -220,7 +228,7 @@
 //     currentProduct.name = name;
 //     currentProduct.price = parseFloat(price);
 //     currentProduct.category = category;
-//     currentProduct.chassisNumber = chassisNumber;
+//     currentProduct.chassisNumber = trimmedChassis;
 //     currentProduct.description = description || currentProduct.description || "";
 //     currentProduct.imageUrl = imageUrl;
 //     currentProduct.cloudinaryPublicId = cloudinaryPublicId;
@@ -286,7 +294,6 @@
 // }
 
 
-
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Product from "@/models/Product";
@@ -299,6 +306,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const chassisNumber = searchParams.get("chassisNumber");
     const searchTerm = searchParams.get("search");
+    const availability = searchParams.get("availability"); // New filter
+    
+    let query: any = {};
     
     // Search by exact chassis number
     if (chassisNumber) {
@@ -314,18 +324,28 @@ export async function GET(request: Request) {
     
     // Search by text (chassis number, name, or description)
     if (searchTerm) {
-      const products = await Product.find({
-        $or: [
-          { chassisNumber: { $regex: searchTerm, $options: 'i' } },
-          { name: { $regex: searchTerm, $options: 'i' } },
-          { description: { $regex: searchTerm, $options: 'i' } }
-        ]
-      }).sort({ createdAt: -1 });
-      return NextResponse.json(products, { status: 200 });
+      query.$or = [
+        { chassisNumber: { $regex: searchTerm, $options: 'i' } },
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } }
+      ];
     }
     
-    // Return all products if no search params
-    const products = await Product.find({}).sort({ createdAt: -1 });
+    // Filter by availability status
+    if (availability) {
+      if (availability === 'IN_STOCK') {
+        query.quantity = { $gt: 0 };
+      } else if (availability === 'INTERNATIONAL_SUPPLIER') {
+        query.quantity = { $lte: 0 };
+        query.supplierAvailable = true;
+      } else if (availability === 'OUT_OF_STOCK') {
+        query.quantity = { $lte: 0 };
+        query.supplierAvailable = false;
+      }
+    }
+    
+    // Return products based on query
+    const products = await Product.find(query).sort({ createdAt: -1 });
     return NextResponse.json(products, { status: 200 });
   } catch (error) {
     console.error("GET error:", error);
@@ -347,11 +367,20 @@ export async function POST(request: Request) {
     const chassisNumber = formData.get("chassisNumber") as string;
     const description = formData.get("description") as string;
     const file = formData.get("image") as File | null;
+    
+    // Inventory fields
+    const quantity = parseInt(formData.get("quantity") as string) || 0;
+    const supplierAvailable = formData.get("supplierAvailable") === "true";
+    const supplierName = formData.get("supplierName") as string || "";
+    const supplierDeliveryTime = formData.get("supplierDeliveryTime") as string || "10-21 business days";
+    const supplierShippingCost = parseFloat(formData.get("supplierShippingCost") as string) || 0;
+    const restockDate = formData.get("restockDate") as string || null;
+    const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 5;
 
-    // Validate required fields - chassis number is now optional
+    // Validate required fields
     if (!name || !price || !category || !file) {
       return NextResponse.json(
-        { message: "Missing required fields. Name, price, category, and image are required. Chassis number is optional." },
+        { message: "Missing required fields. Name, price, category, and image are required." },
         { status: 400 }
       );
     }
@@ -390,7 +419,7 @@ export async function POST(request: Request) {
     const imageUrl = uploadedFile.secure_url;
     const cloudinaryPublicId = uploadedFile.public_id;
 
-    // Create product with all fields
+    // Create product with all fields including inventory
     const newProduct = await Product.create({
       name,
       price: parseFloat(price),
@@ -404,7 +433,15 @@ export async function POST(request: Request) {
         height: uploadedFile.height,
         format: uploadedFile.format,
         bytes: uploadedFile.bytes,
-      }
+      },
+      // Inventory fields
+      quantity,
+      supplierAvailable,
+      supplierName: supplierAvailable ? supplierName : "",
+      supplierDeliveryTime: supplierAvailable ? supplierDeliveryTime : "10-21 business days",
+      supplierShippingCost: supplierAvailable ? supplierShippingCost : 0,
+      restockDate: (!quantity && !supplierAvailable && restockDate) ? new Date(restockDate) : null,
+      lowStockThreshold,
     });
 
     return NextResponse.json(
@@ -432,8 +469,17 @@ export async function PUT(request: Request) {
     const chassisNumber = formData.get("chassisNumber") as string;
     const description = formData.get("description") as string;
     const file = formData.get("image") as File | null;
+    
+    // Inventory fields
+    const quantity = parseInt(formData.get("quantity") as string) || 0;
+    const supplierAvailable = formData.get("supplierAvailable") === "true";
+    const supplierName = formData.get("supplierName") as string || "";
+    const supplierDeliveryTime = formData.get("supplierDeliveryTime") as string || "10-21 business days";
+    const supplierShippingCost = parseFloat(formData.get("supplierShippingCost") as string) || 0;
+    const restockDate = formData.get("restockDate") as string || null;
+    const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 5;
 
-    // Validate required fields - chassis number is now optional
+    // Validate required fields
     if (!id || !name || !price || !category) {
       return NextResponse.json(
         { message: "Missing required details to update item." },
@@ -511,7 +557,7 @@ export async function PUT(request: Request) {
       };
     }
 
-    // Update all fields
+    // Update all fields including inventory
     currentProduct.name = name;
     currentProduct.price = parseFloat(price);
     currentProduct.category = category;
@@ -520,6 +566,16 @@ export async function PUT(request: Request) {
     currentProduct.imageUrl = imageUrl;
     currentProduct.cloudinaryPublicId = cloudinaryPublicId;
     currentProduct.cloudinaryAssetInfo = cloudinaryAssetInfo;
+    
+    // Update inventory fields
+    currentProduct.quantity = quantity;
+    currentProduct.supplierAvailable = supplierAvailable;
+    currentProduct.supplierName = supplierAvailable ? supplierName : "";
+    currentProduct.supplierDeliveryTime = supplierAvailable ? supplierDeliveryTime : "10-21 business days";
+    currentProduct.supplierShippingCost = supplierAvailable ? supplierShippingCost : 0;
+    currentProduct.restockDate = (!quantity && !supplierAvailable && restockDate) ? new Date(restockDate) : null;
+    currentProduct.lowStockThreshold = lowStockThreshold;
+    
     await currentProduct.save();
 
     return NextResponse.json(
