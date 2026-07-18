@@ -1416,8 +1416,15 @@ export default function AdminDashboardPage() {
                   >
                     <option value="" className="text-gray-400">Select a category...</option>
                     <option value="Brakes" className="text-white">Brakes</option>
-                    <option value="Engine" className="text-white">Engine</option>
-                    <option value="Suspension" className="text-white">Suspension</option>
+                    <option value="Suspension & Frame" className="text-white">Suspension & Frame</option>
+                    <option value="Bearings and Seals" className="text-white">Bearings and Seals</option>
+                    <option value="Chassis & Others" className="text-white">Chassis & Others</option>
+                    <option value="Engine Component" className="text-white">Engine Component</option>
+                    <option value="Filters" className="text-white">Filters</option>
+                    <option value="Lubricants" className="text-white">Lubricants</option>
+                    <option value="Steering System" className="text-white">Steering System</option>
+                    <option value="Transmission & Wheels" className="text-white">Transmission & Wheels</option>
+                    <option value="Body & Electrical" className="text-white">Body & Electrical</option>
                   </select>
                 </div>
               </div>
