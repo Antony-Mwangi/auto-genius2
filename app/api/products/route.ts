@@ -12,6 +12,9 @@
 //     const { searchParams } = new URL(request.url);
 //     const chassisNumber = searchParams.get("chassisNumber");
 //     const searchTerm = searchParams.get("search");
+//     const availability = searchParams.get("availability"); // New filter
+    
+//     let query: any = {};
     
 //     // Search by exact chassis number
 //     if (chassisNumber) {
@@ -27,18 +30,28 @@
     
 //     // Search by text (chassis number, name, or description)
 //     if (searchTerm) {
-//       const products = await Product.find({
-//         $or: [
-//           { chassisNumber: { $regex: searchTerm, $options: 'i' } },
-//           { name: { $regex: searchTerm, $options: 'i' } },
-//           { description: { $regex: searchTerm, $options: 'i' } }
-//         ]
-//       }).sort({ createdAt: -1 });
-//       return NextResponse.json(products, { status: 200 });
+//       query.$or = [
+//         { chassisNumber: { $regex: searchTerm, $options: 'i' } },
+//         { name: { $regex: searchTerm, $options: 'i' } },
+//         { description: { $regex: searchTerm, $options: 'i' } }
+//       ];
 //     }
     
-//     // Return all products if no search params
-//     const products = await Product.find({}).sort({ createdAt: -1 });
+//     // Filter by availability status
+//     if (availability) {
+//       if (availability === 'IN_STOCK') {
+//         query.quantity = { $gt: 0 };
+//       } else if (availability === 'INTERNATIONAL_SUPPLIER') {
+//         query.quantity = { $lte: 0 };
+//         query.supplierAvailable = true;
+//       } else if (availability === 'OUT_OF_STOCK') {
+//         query.quantity = { $lte: 0 };
+//         query.supplierAvailable = false;
+//       }
+//     }
+    
+//     // Return products based on query
+//     const products = await Product.find(query).sort({ createdAt: -1 });
 //     return NextResponse.json(products, { status: 200 });
 //   } catch (error) {
 //     console.error("GET error:", error);
@@ -60,11 +73,20 @@
 //     const chassisNumber = formData.get("chassisNumber") as string;
 //     const description = formData.get("description") as string;
 //     const file = formData.get("image") as File | null;
+    
+//     // Inventory fields
+//     const quantity = parseInt(formData.get("quantity") as string) || 0;
+//     const supplierAvailable = formData.get("supplierAvailable") === "true";
+//     const supplierName = formData.get("supplierName") as string || "";
+//     const supplierDeliveryTime = formData.get("supplierDeliveryTime") as string || "10-21 business days";
+//     const supplierShippingCost = parseFloat(formData.get("supplierShippingCost") as string) || 0;
+//     const restockDate = formData.get("restockDate") as string || null;
+//     const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 5;
 
-//     // Validate required fields - chassis number is now optional
+//     // Validate required fields
 //     if (!name || !price || !category || !file) {
 //       return NextResponse.json(
-//         { message: "Missing required fields. Name, price, category, and image are required. Chassis number is optional." },
+//         { message: "Missing required fields. Name, price, category, and image are required." },
 //         { status: 400 }
 //       );
 //     }
@@ -103,7 +125,7 @@
 //     const imageUrl = uploadedFile.secure_url;
 //     const cloudinaryPublicId = uploadedFile.public_id;
 
-//     // Create product with all fields
+//     // Create product with all fields including inventory
 //     const newProduct = await Product.create({
 //       name,
 //       price: parseFloat(price),
@@ -117,7 +139,15 @@
 //         height: uploadedFile.height,
 //         format: uploadedFile.format,
 //         bytes: uploadedFile.bytes,
-//       }
+//       },
+//       // Inventory fields
+//       quantity,
+//       supplierAvailable,
+//       supplierName: supplierAvailable ? supplierName : "",
+//       supplierDeliveryTime: supplierAvailable ? supplierDeliveryTime : "10-21 business days",
+//       supplierShippingCost: supplierAvailable ? supplierShippingCost : 0,
+//       restockDate: (!quantity && !supplierAvailable && restockDate) ? new Date(restockDate) : null,
+//       lowStockThreshold,
 //     });
 
 //     return NextResponse.json(
@@ -145,8 +175,17 @@
 //     const chassisNumber = formData.get("chassisNumber") as string;
 //     const description = formData.get("description") as string;
 //     const file = formData.get("image") as File | null;
+    
+//     // Inventory fields
+//     const quantity = parseInt(formData.get("quantity") as string) || 0;
+//     const supplierAvailable = formData.get("supplierAvailable") === "true";
+//     const supplierName = formData.get("supplierName") as string || "";
+//     const supplierDeliveryTime = formData.get("supplierDeliveryTime") as string || "10-21 business days";
+//     const supplierShippingCost = parseFloat(formData.get("supplierShippingCost") as string) || 0;
+//     const restockDate = formData.get("restockDate") as string || null;
+//     const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 5;
 
-//     // Validate required fields - chassis number is now optional
+//     // Validate required fields
 //     if (!id || !name || !price || !category) {
 //       return NextResponse.json(
 //         { message: "Missing required details to update item." },
@@ -224,7 +263,7 @@
 //       };
 //     }
 
-//     // Update all fields
+//     // Update all fields including inventory
 //     currentProduct.name = name;
 //     currentProduct.price = parseFloat(price);
 //     currentProduct.category = category;
@@ -233,6 +272,16 @@
 //     currentProduct.imageUrl = imageUrl;
 //     currentProduct.cloudinaryPublicId = cloudinaryPublicId;
 //     currentProduct.cloudinaryAssetInfo = cloudinaryAssetInfo;
+    
+//     // Update inventory fields
+//     currentProduct.quantity = quantity;
+//     currentProduct.supplierAvailable = supplierAvailable;
+//     currentProduct.supplierName = supplierAvailable ? supplierName : "";
+//     currentProduct.supplierDeliveryTime = supplierAvailable ? supplierDeliveryTime : "10-21 business days";
+//     currentProduct.supplierShippingCost = supplierAvailable ? supplierShippingCost : 0;
+//     currentProduct.restockDate = (!quantity && !supplierAvailable && restockDate) ? new Date(restockDate) : null;
+//     currentProduct.lowStockThreshold = lowStockThreshold;
+    
 //     await currentProduct.save();
 
 //     return NextResponse.json(
@@ -306,7 +355,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const chassisNumber = searchParams.get("chassisNumber");
     const searchTerm = searchParams.get("search");
-    const availability = searchParams.get("availability"); // New filter
+    const availability = searchParams.get("availability");
     
     let query: any = {};
     
@@ -376,6 +425,18 @@ export async function POST(request: Request) {
     const supplierShippingCost = parseFloat(formData.get("supplierShippingCost") as string) || 0;
     const restockDate = formData.get("restockDate") as string || null;
     const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 5;
+    
+    // Shipping Options - Air
+    const airEnabled = formData.get("shippingOptions[air][enabled]") === "true";
+    const airDeliveryTime = formData.get("shippingOptions[air][deliveryTime]") as string || "3-7 business days";
+    const airCost = parseFloat(formData.get("shippingOptions[air][cost]") as string) || 0;
+    const airDescription = formData.get("shippingOptions[air][description]") as string || "Express shipping by air freight";
+    
+    // Shipping Options - Sea
+    const seaEnabled = formData.get("shippingOptions[sea][enabled]") === "true";
+    const seaDeliveryTime = formData.get("shippingOptions[sea][deliveryTime]") as string || "20-35 business days";
+    const seaCost = parseFloat(formData.get("shippingOptions[sea][cost]") as string) || 0;
+    const seaDescription = formData.get("shippingOptions[sea][description]") as string || "Standard shipping by sea freight";
 
     // Validate required fields
     if (!name || !price || !category || !file) {
@@ -419,7 +480,7 @@ export async function POST(request: Request) {
     const imageUrl = uploadedFile.secure_url;
     const cloudinaryPublicId = uploadedFile.public_id;
 
-    // Create product with all fields including inventory
+    // Create product with all fields including inventory and shipping options
     const newProduct = await Product.create({
       name,
       price: parseFloat(price),
@@ -442,6 +503,21 @@ export async function POST(request: Request) {
       supplierShippingCost: supplierAvailable ? supplierShippingCost : 0,
       restockDate: (!quantity && !supplierAvailable && restockDate) ? new Date(restockDate) : null,
       lowStockThreshold,
+      // Shipping Options
+      shippingOptions: supplierAvailable ? {
+        air: {
+          enabled: airEnabled,
+          deliveryTime: airDeliveryTime,
+          cost: airCost,
+          description: airDescription
+        },
+        sea: {
+          enabled: seaEnabled,
+          deliveryTime: seaDeliveryTime,
+          cost: seaCost,
+          description: seaDescription
+        }
+      } : undefined
     });
 
     return NextResponse.json(
@@ -478,6 +554,18 @@ export async function PUT(request: Request) {
     const supplierShippingCost = parseFloat(formData.get("supplierShippingCost") as string) || 0;
     const restockDate = formData.get("restockDate") as string || null;
     const lowStockThreshold = parseInt(formData.get("lowStockThreshold") as string) || 5;
+    
+    // Shipping Options - Air
+    const airEnabled = formData.get("shippingOptions[air][enabled]") === "true";
+    const airDeliveryTime = formData.get("shippingOptions[air][deliveryTime") as string || "3-7 business days";
+    const airCost = parseFloat(formData.get("shippingOptions[air][cost]") as string) || 0;
+    const airDescription = formData.get("shippingOptions[air][description]") as string || "Express shipping by air freight";
+    
+    // Shipping Options - Sea
+    const seaEnabled = formData.get("shippingOptions[sea][enabled]") === "true";
+    const seaDeliveryTime = formData.get("shippingOptions[sea][deliveryTime]") as string || "20-35 business days";
+    const seaCost = parseFloat(formData.get("shippingOptions[sea][cost]") as string) || 0;
+    const seaDescription = formData.get("shippingOptions[sea][description]") as string || "Standard shipping by sea freight";
 
     // Validate required fields
     if (!id || !name || !price || !category) {
@@ -557,7 +645,7 @@ export async function PUT(request: Request) {
       };
     }
 
-    // Update all fields including inventory
+    // Update all fields including inventory and shipping options
     currentProduct.name = name;
     currentProduct.price = parseFloat(price);
     currentProduct.category = category;
@@ -575,6 +663,26 @@ export async function PUT(request: Request) {
     currentProduct.supplierShippingCost = supplierAvailable ? supplierShippingCost : 0;
     currentProduct.restockDate = (!quantity && !supplierAvailable && restockDate) ? new Date(restockDate) : null;
     currentProduct.lowStockThreshold = lowStockThreshold;
+    
+    // Update shipping options
+    if (supplierAvailable) {
+      currentProduct.shippingOptions = {
+        air: {
+          enabled: airEnabled,
+          deliveryTime: airDeliveryTime,
+          cost: airCost,
+          description: airDescription
+        },
+        sea: {
+          enabled: seaEnabled,
+          deliveryTime: seaDeliveryTime,
+          cost: seaCost,
+          description: seaDescription
+        }
+      };
+    } else {
+      currentProduct.shippingOptions = undefined;
+    }
     
     await currentProduct.save();
 

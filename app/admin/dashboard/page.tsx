@@ -1,5 +1,4 @@
 
-
 // "use client";
 
 // import { useState, useEffect } from "react";
@@ -54,6 +53,18 @@
 //   };
 //   isPurchasable?: boolean;
 //   isLowStock?: boolean;
+//   quoteRequests?: Array<{
+//     _id: string;
+//     customerName: string;
+//     email: string;
+//     phone: string;
+//     quantity: number;
+//     message: string;
+//     status: 'pending' | 'contacted' | 'ordered' | 'fulfilled';
+//     requestedAt: string;
+//     contactedAt?: string;
+//     notes?: string;
+//   }>;
 // }
 
 // type OrderStatus = "Pending" | "Processed" | "Dispatched" | "Delivered";
@@ -72,7 +83,7 @@
 
 // export default function AdminDashboardPage() {
 //   const router = useRouter();
-//   const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
+//   const [activeTab, setActiveTab] = useState<"products" | "orders" | "quotes">("products");
 //   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 //   // 1. PRODUCT & INVENTORY MANAGEMENT STATES
@@ -99,6 +110,11 @@
 //   // 2. LIVE ORDER STATES & TICKETING
 //   const [orders, setOrders] = useState<OrderNotification[]>([]);
 //   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+
+//   // 3. QUOTE REQUESTS STATES
+//   const [quoteRequests, setQuoteRequests] = useState<any[]>([]);
+//   const [quoteLoading, setQuoteLoading] = useState(false);
+//   const [selectedProductQuotes, setSelectedProductQuotes] = useState<any>(null);
 
 //   const fetchInventory = async () => {
 //     try {
@@ -135,9 +151,23 @@
 //     }
 //   };
 
+//   const fetchQuoteRequests = async () => {
+//     try {
+//       // Fetch all products with quote requests
+//       const res = await fetch("/api/products/quote/all");
+//       if (res.ok) {
+//         const data = await res.json();
+//         setQuoteRequests(data);
+//       }
+//     } catch (err) {
+//       console.error("Failed to fetch quote requests:", err);
+//     }
+//   };
+
 //   useEffect(() => {
 //     fetchInventory();
 //     fetchLiveOrders();
+//     fetchQuoteRequests();
 
 //     const syncInterval = setInterval(fetchLiveOrders, 8000);
 //     return () => clearInterval(syncInterval);
@@ -153,6 +183,9 @@
 //   };
 
 //   const counts = getOrderCounts();
+
+//   // Count pending quote requests
+//   const pendingQuotes = quoteRequests.filter(q => q.status === 'pending').length;
 
 //   const handleLogout = async () => {
 //     try {
@@ -313,6 +346,27 @@
 //     }
 //   };
 
+//   const updateQuoteStatus = async (quoteId: string, productId: string, newStatus: string) => {
+//     try {
+//       const res = await fetch("/api/products/quote/update", {
+//         method: "PUT",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ quoteId, productId, status: newStatus }),
+//       });
+
+//       if (res.ok) {
+//         fetchQuoteRequests();
+//         // Refresh product list to update quote counts
+//         fetchInventory();
+//       } else {
+//         alert("Failed to update quote status");
+//       }
+//     } catch (error) {
+//       console.error("Update quote error:", error);
+//       alert("Network error while updating quote status");
+//     }
+//   };
+
 //   const getStatusBadgeConfig = (status: OrderStatus) => {
 //     const configs = {
 //       Pending: { bg: "bg-orange-500/10", border: "border-orange-500/20", text: "text-orange-400", dot: "bg-orange-500" },
@@ -447,6 +501,20 @@
 //                 </span>
 //                 {counts.pending > 0 && <span className="bg-red-500 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">{counts.pending}</span>}
 //               </button>
+
+//               <button 
+//                 onClick={() => { setActiveTab("quotes"); setIsMobileMenuOpen(false); }} 
+//                 className={`w-full text-left p-3.5 rounded-xl font-semibold text-sm transition flex items-center justify-between cursor-pointer ${activeTab === "quotes" ? "bg-orange-500 text-white shadow-lg shadow-orange-500/10" : "text-gray-400 hover:bg-white/5"}`}
+//               >
+//                 <span className="flex items-center gap-3">
+//                   <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+//                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.25 18.75 5.972 5.972 0 013 16.305A9.764 9.764 0 012.25 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+//                   </svg>
+//                   <span>Quote Requests</span>
+//                   {pendingQuotes > 0 && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block" />}
+//                 </span>
+//                 {pendingQuotes > 0 && <span className="bg-blue-500 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">{pendingQuotes}</span>}
+//               </button>
 //             </nav>
 //           </div>
           
@@ -495,7 +563,7 @@
 //               </div>
 //             )}
 
-//             {/* PRODUCT INPUT FORM */}
+//             {/* PRODUCT INPUT FORM - Same as before */}
 //             <form onSubmit={handleProductSubmit} className="bg-[#111827] border border-orange-500/10 rounded-2xl p-5 sm:p-8 space-y-5 shadow-xl relative">
 //               {isEditing && <div className="absolute top-0 left-0 right-0 h-1 bg-orange-500 rounded-t-2xl" />}
               
@@ -712,7 +780,7 @@
 //               </button>
 //             </form>
 
-//             {/* LIVE INVENTORY DATA CONTENT DISPLAY */}
+//             {/* LIVE INVENTORY DATA CONTENT DISPLAY - Same as before */}
 //             <div className="space-y-4 pt-2">
 //               <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({dbProducts.length})</h2>
               
@@ -743,6 +811,11 @@
 //                               <div className="font-bold text-white text-sm">{item.name}</div>
 //                               {item.description && (
 //                                 <div className="text-gray-400 text-xs mt-0.5 line-clamp-1">{item.description}</div>
+//                               )}
+//                               {item.quoteRequests && item.quoteRequests.length > 0 && (
+//                                 <div className="text-[9px] text-blue-400 mt-1">
+//                                   📩 {item.quoteRequests.filter(q => q.status === 'pending').length} pending quote requests
+//                                 </div>
 //                               )}
 //                             </td>
 //                             <td className="p-4">
@@ -992,6 +1065,116 @@
 //             </div>
 //           </div>
 //         )}
+
+//         {/* ==================== MODULE 3: QUOTE REQUESTS ==================== */}
+//         {activeTab === "quotes" && (
+//           <div className="space-y-6">
+//             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4 sm:pb-6">
+//               <div>
+//                 <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Quote Requests</h1>
+//                 <p className="text-gray-400 text-xs sm:text-sm mt-1">Manage customer quote requests for out-of-stock products.</p>
+//               </div>
+//               <button 
+//                 onClick={fetchQuoteRequests}
+//                 className="bg-white/5 border border-white/10 hover:bg-white/10 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"
+//               >
+//                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+//                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+//                 </svg>
+//                 Refresh
+//               </button>
+//             </div>
+
+//             {quoteRequests.length === 0 ? (
+//               <div className="text-center py-16 bg-[#111827] border border-white/10 rounded-2xl text-gray-400 text-sm font-medium">
+//                 No quote requests yet.
+//               </div>
+//             ) : (
+//               <div className="space-y-4">
+//                 {quoteRequests.map((request: any) => (
+//                   <div key={request._id} className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl transition hover:border-orange-500/20">
+//                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+//                       <div className="space-y-2 flex-1">
+//                         <div className="flex flex-wrap items-center gap-2">
+//                           <h3 className="font-bold text-sm sm:text-base text-white">{request.customerName}</h3>
+//                           <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider ${
+//                             request.status === 'pending' ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400' :
+//                             request.status === 'contacted' ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' :
+//                             request.status === 'ordered' ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400' :
+//                             'bg-green-500/10 border border-green-500/20 text-green-400'
+//                           }`}>
+//                             {request.status}
+//                           </span>
+//                         </div>
+//                         <p className="text-xs text-gray-400">
+//                           Product: <span className="text-white font-bold">{request.productName}</span>
+//                         </p>
+//                         <p className="text-xs text-gray-400">
+//                           Quantity: <span className="text-white font-bold">{request.quantity}</span>
+//                         </p>
+//                         <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+//                           <span>📧 {request.email}</span>
+//                           <span>📱 {request.phone}</span>
+//                           <span>📅 {new Date(request.requestedAt).toLocaleString()}</span>
+//                         </div>
+//                         {request.message && (
+//                           <p className="text-xs text-gray-300 bg-[#0b0f14] p-2 rounded-lg mt-1">
+//                             <span className="text-gray-500">Message:</span> {request.message}
+//                           </p>
+//                         )}
+//                       </div>
+//                       <div className="shrink-0 w-full md:w-auto flex flex-wrap gap-2">
+//                         <a
+//                           href={`https://wa.me/${request.phone.replace(/\D/g, '')}?text=Hello%20${encodeURIComponent(request.customerName)}%2C%20Thank%20you%20for%20your%20quote%20request%20for%20${encodeURIComponent(request.productName)}.%20We%20are%20currently%20checking%20availability%20and%20will%20get%20back%20to%20you%20shortly.`}
+//                           target="_blank"
+//                           rel="noopener noreferrer"
+//                           className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/20 text-green-400 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5"
+//                         >
+//                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+//                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+//                           </svg>
+//                           WhatsApp
+//                         </a>
+//                         {request.status === 'pending' && (
+//                           <>
+//                             <button
+//                               onClick={() => updateQuoteStatus(request._id, request.productId, 'contacted')}
+//                               className="bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5"
+//                             >
+//                               Mark Contacted
+//                             </button>
+//                             <button
+//                               onClick={() => updateQuoteStatus(request._id, request.productId, 'ordered')}
+//                               className="bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5"
+//                             >
+//                               Mark Ordered
+//                             </button>
+//                           </>
+//                         )}
+//                         {request.status === 'contacted' && (
+//                           <button
+//                             onClick={() => updateQuoteStatus(request._id, request.productId, 'ordered')}
+//                             className="bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5"
+//                           >
+//                             Mark Ordered
+//                           </button>
+//                         )}
+//                         {(request.status === 'ordered' || request.status === 'contacted') && (
+//                           <button
+//                             onClick={() => updateQuoteStatus(request._id, request.productId, 'fulfilled')}
+//                             className="bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5"
+//                           >
+//                             Mark Fulfilled
+//                           </button>
+//                         )}
+//                       </div>
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+//         )}
 //       </section>
 //     </main>
 //   );
@@ -1016,6 +1199,10 @@ interface ProductForm {
   supplierName: string;
   supplierDeliveryTime: string;
   supplierShippingCost: number;
+  shippingOptions?: {
+    air?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+    sea?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+  };
   restockDate: string;
   lowStockThreshold: number;
   imageFile: File | null;
@@ -1034,6 +1221,10 @@ interface DBProduct {
   supplierName?: string;
   supplierDeliveryTime?: string;
   supplierShippingCost?: number;
+  shippingOptions?: {
+    air?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+    sea?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+  };
   restockDate?: string;
   lowStockThreshold?: number;
   availabilityStatus?: string;
@@ -1047,6 +1238,13 @@ interface DBProduct {
     isLowStock?: boolean;
     supplierName?: string;
     shippingCost?: number;
+    shippingOptions?: Array<{
+      method: string;
+      label: string;
+      deliveryTime: string;
+      cost: number;
+      description: string;
+    }>;
     restockDate?: string;
     restockMessage?: string;
   };
@@ -1058,6 +1256,7 @@ interface DBProduct {
     email: string;
     phone: string;
     quantity: number;
+    shippingMethod: 'air' | 'sea';
     message: string;
     status: 'pending' | 'contacted' | 'ordered' | 'fulfilled';
     requestedAt: string;
@@ -1099,6 +1298,10 @@ export default function AdminDashboardPage() {
     supplierName: "",
     supplierDeliveryTime: "10-21 business days",
     supplierShippingCost: 0,
+    shippingOptions: {
+      air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+      sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+    },
     restockDate: "",
     lowStockThreshold: 5,
     imageFile: null,
@@ -1152,7 +1355,6 @@ export default function AdminDashboardPage() {
 
   const fetchQuoteRequests = async () => {
     try {
-      // Fetch all products with quote requests
       const res = await fetch("/api/products/quote/all");
       if (res.ok) {
         const data = await res.json();
@@ -1213,6 +1415,10 @@ export default function AdminDashboardPage() {
       supplierName: item.supplierName || "",
       supplierDeliveryTime: item.supplierDeliveryTime || "10-21 business days",
       supplierShippingCost: item.supplierShippingCost || 0,
+      shippingOptions: item.shippingOptions || {
+        air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+        sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+      },
       restockDate: item.restockDate ? new Date(item.restockDate).toISOString().split('T')[0] : "",
       lowStockThreshold: item.lowStockThreshold || 5,
       imageFile: null,
@@ -1234,6 +1440,10 @@ export default function AdminDashboardPage() {
       supplierName: "",
       supplierDeliveryTime: "10-21 business days",
       supplierShippingCost: 0,
+      shippingOptions: {
+        air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+        sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+      },
       restockDate: "",
       lowStockThreshold: 5,
       imageFile: null 
@@ -1241,6 +1451,51 @@ export default function AdminDashboardPage() {
     setProductMessage(null);
     const fileInput = document.getElementById("file-upload-input") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
+  };
+
+  // Helper function to update shipping options without TypeScript errors
+  const updateShippingOption = (type: 'air' | 'sea', field: string, value: any) => {
+    setProduct(prev => {
+      const currentOptions = prev.shippingOptions || {
+        air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+        sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+      };
+
+      const updatedOption = {
+        ...currentOptions[type],
+        [field]: value
+      };
+
+      return {
+        ...prev,
+        shippingOptions: {
+          ...currentOptions,
+          [type]: updatedOption
+        }
+      };
+    });
+  };
+
+  const toggleShippingOption = (type: 'air' | 'sea') => {
+    setProduct(prev => {
+      const currentOptions = prev.shippingOptions || {
+        air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+        sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+      };
+
+      const currentEnabled = currentOptions[type]?.enabled ?? true;
+
+      return {
+        ...prev,
+        shippingOptions: {
+          ...currentOptions,
+          [type]: {
+            ...currentOptions[type],
+            enabled: !currentEnabled
+          }
+        }
+      };
+    });
   };
 
   const handleProductSubmit = async (e: React.FormEvent) => {
@@ -1258,19 +1513,30 @@ export default function AdminDashboardPage() {
     data.append("price", product.price);
     data.append("category", product.category);
     
-    // Only append chassisNumber if it has a value
     if (product.chassisNumber && product.chassisNumber.trim()) {
       data.append("chassisNumber", product.chassisNumber.trim());
     }
     data.append("description", product.description.trim());
     
-    // Inventory fields
     data.append("quantity", product.quantity.toString());
     data.append("supplierAvailable", product.supplierAvailable ? "true" : "false");
     if (product.supplierAvailable) {
       data.append("supplierName", product.supplierName);
       data.append("supplierDeliveryTime", product.supplierDeliveryTime);
       data.append("supplierShippingCost", product.supplierShippingCost.toString());
+      
+      // Shipping options - Air and Sea
+      if (product.shippingOptions) {
+        data.append("shippingOptions[air][enabled]", product.shippingOptions.air?.enabled ? "true" : "false");
+        data.append("shippingOptions[air][deliveryTime]", product.shippingOptions.air?.deliveryTime || "3-7 business days");
+        data.append("shippingOptions[air][cost]", (product.shippingOptions.air?.cost || 0).toString());
+        data.append("shippingOptions[air][description]", product.shippingOptions.air?.description || "Express shipping by air freight");
+        
+        data.append("shippingOptions[sea][enabled]", product.shippingOptions.sea?.enabled ? "true" : "false");
+        data.append("shippingOptions[sea][deliveryTime]", product.shippingOptions.sea?.deliveryTime || "20-35 business days");
+        data.append("shippingOptions[sea][cost]", (product.shippingOptions.sea?.cost || 0).toString());
+        data.append("shippingOptions[sea][description]", product.shippingOptions.sea?.description || "Standard shipping by sea freight");
+      }
     }
     if (product.restockDate) {
       data.append("restockDate", product.restockDate);
@@ -1355,7 +1621,6 @@ export default function AdminDashboardPage() {
 
       if (res.ok) {
         fetchQuoteRequests();
-        // Refresh product list to update quote counts
         fetchInventory();
       } else {
         alert("Failed to update quote status");
@@ -1388,7 +1653,6 @@ export default function AdminDashboardPage() {
     return ((index + 1) / flow.length) * 100;
   };
 
-  // Helper function to render availability badge
   const getAvailabilityBadge = (item: DBProduct) => {
     const display = item.availabilityDisplay || {
       status: 'Unknown',
@@ -1434,6 +1698,27 @@ export default function AdminDashboardPage() {
           <span className="text-[8px] text-yellow-400 ml-1">⚠️ Low Stock</span>
         )}
       </span>
+    );
+  };
+
+  // Helper function to render shipping options safely
+  const renderShippingOptions = (item: DBProduct) => {
+    if (!item.availabilityDisplay?.shippingOptions || item.availabilityDisplay.shippingOptions.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="text-[8px] text-gray-500">
+        {item.availabilityDisplay.shippingOptions.map((opt, idx) => {
+          const total = item.availabilityDisplay?.shippingOptions?.length || 0;
+          return (
+            <span key={idx}>
+              {opt.method === 'air' ? '✈️' : '🚢'} {opt.deliveryTime}
+              {idx < total - 1 ? ' | ' : ''}
+            </span>
+          );
+        })}
+      </div>
     );
   };
 
@@ -1562,7 +1847,7 @@ export default function AdminDashboardPage() {
               </div>
             )}
 
-            {/* PRODUCT INPUT FORM - Same as before */}
+            {/* PRODUCT INPUT FORM */}
             <form onSubmit={handleProductSubmit} className="bg-[#111827] border border-orange-500/10 rounded-2xl p-5 sm:p-8 space-y-5 shadow-xl relative">
               {isEditing && <div className="absolute top-0 left-0 right-0 h-1 bg-orange-500 rounded-t-2xl" />}
               
@@ -1578,7 +1863,6 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              {/* Chassis Number - Now Optional */}
               <div>
                 <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
                   Chassis Number <span className="text-gray-500 text-[10px]">(Optional)</span>
@@ -1593,7 +1877,6 @@ export default function AdminDashboardPage() {
                 <p className="text-[10px] text-gray-500 mt-1">Optional unique identifier for customer searches</p>
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Product Description</label>
                 <textarea 
@@ -1707,6 +1990,95 @@ export default function AdminDashboardPage() {
                         />
                       </div>
                     </div>
+
+                    {/* SHIPPING OPTIONS - Air and Sea Freight */}
+                    <div className="border-t border-blue-500/20 pt-3 mt-2">
+                      <h5 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Shipping Options</h5>
+                      
+                      {/* Air Freight */}
+                      <div className="border border-white/10 rounded-xl p-3 mb-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">✈️</span>
+                            <span className="text-xs font-bold text-white">Air Freight</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleShippingOption('air')}
+                            className={`relative w-10 h-5 rounded-full transition ${product.shippingOptions?.air?.enabled !== false ? 'bg-blue-500' : 'bg-white/20'}`}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition ${product.shippingOptions?.air?.enabled !== false ? 'right-0.5' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+                        {product.shippingOptions?.air?.enabled !== false && (
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div>
+                              <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Delivery Time</label>
+                              <input
+                                type="text"
+                                placeholder="3-7 business days"
+                                value={product.shippingOptions?.air?.deliveryTime || "3-7 business days"}
+                                onChange={e => updateShippingOption('air', 'deliveryTime', e.target.value)}
+                                className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Cost (Ksh)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                value={product.shippingOptions?.air?.cost || 0}
+                                onChange={e => updateShippingOption('air', 'cost', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Sea Freight */}
+                      <div className="border border-white/10 rounded-xl p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🚢</span>
+                            <span className="text-xs font-bold text-white">Sea Freight</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleShippingOption('sea')}
+                            className={`relative w-10 h-5 rounded-full transition ${product.shippingOptions?.sea?.enabled !== false ? 'bg-blue-500' : 'bg-white/20'}`}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition ${product.shippingOptions?.sea?.enabled !== false ? 'right-0.5' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+                        {product.shippingOptions?.sea?.enabled !== false && (
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div>
+                              <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Delivery Time</label>
+                              <input
+                                type="text"
+                                placeholder="20-35 business days"
+                                value={product.shippingOptions?.sea?.deliveryTime || "20-35 business days"}
+                                onChange={e => updateShippingOption('sea', 'deliveryTime', e.target.value)}
+                                className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Cost (Ksh)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                value={product.shippingOptions?.sea?.cost || 0}
+                                onChange={e => updateShippingOption('sea', 'cost', parseFloat(e.target.value) || 0)}
+                                className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1779,7 +2151,7 @@ export default function AdminDashboardPage() {
               </button>
             </form>
 
-            {/* LIVE INVENTORY DATA CONTENT DISPLAY - Same as before */}
+            {/* LIVE INVENTORY DATA CONTENT DISPLAY */}
             <div className="space-y-4 pt-2">
               <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({dbProducts.length})</h2>
               
@@ -1832,6 +2204,7 @@ export default function AdminDashboardPage() {
                                 {item.availabilityDisplay?.message && (
                                   <span className="text-[9px] text-gray-500">{item.availabilityDisplay.message}</span>
                                 )}
+                                {renderShippingOptions(item)}
                               </div>
                             </td>
                             <td className="p-4">
