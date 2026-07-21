@@ -1061,6 +1061,7 @@ I would like to know:
 1. Availability and lead time
 2. Total cost including shipping
 3. Any additional charges
+4. Payment terms
 
 Please get back to me with a quotation.
 
