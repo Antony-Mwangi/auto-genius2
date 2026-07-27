@@ -240,8 +240,8 @@ import Link from "next/link";
 
 // Shipping location options with their costs
 const SHIPPING_LOCATIONS = {
-  "Nairobi Area": { label: "Nairobi Area", cost: 1000 },
-  "Outside Nairobi": { label: "Outside Nairobi", cost: 1500 },
+  "Nairobi Area": { label: "Nairobi Area", cost: 300},
+  "Outside Nairobi": { label: "Outside Nairobi", cost: 600 },
   "Pickup at Shop": { label: "Pickup at Shop", cost: 0 },
 } as const;
 
