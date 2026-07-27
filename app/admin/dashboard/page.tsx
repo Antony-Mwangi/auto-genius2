@@ -1,4 +1,3 @@
-
 // "use client";
 
 // import { useState, useEffect } from "react";
@@ -17,6 +16,10 @@
 //   supplierName: string;
 //   supplierDeliveryTime: string;
 //   supplierShippingCost: number;
+//   shippingOptions?: {
+//     air?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+//     sea?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+//   };
 //   restockDate: string;
 //   lowStockThreshold: number;
 //   imageFile: File | null;
@@ -35,6 +38,10 @@
 //   supplierName?: string;
 //   supplierDeliveryTime?: string;
 //   supplierShippingCost?: number;
+//   shippingOptions?: {
+//     air?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+//     sea?: { enabled: boolean; deliveryTime: string; cost: number; description: string };
+//   };
 //   restockDate?: string;
 //   lowStockThreshold?: number;
 //   availabilityStatus?: string;
@@ -48,6 +55,13 @@
 //     isLowStock?: boolean;
 //     supplierName?: string;
 //     shippingCost?: number;
+//     shippingOptions?: Array<{
+//       method: string;
+//       label: string;
+//       deliveryTime: string;
+//       cost: number;
+//       description: string;
+//     }>;
 //     restockDate?: string;
 //     restockMessage?: string;
 //   };
@@ -59,6 +73,7 @@
 //     email: string;
 //     phone: string;
 //     quantity: number;
+//     shippingMethod: 'air' | 'sea';
 //     message: string;
 //     status: 'pending' | 'contacted' | 'ordered' | 'fulfilled';
 //     requestedAt: string;
@@ -100,6 +115,10 @@
 //     supplierName: "",
 //     supplierDeliveryTime: "10-21 business days",
 //     supplierShippingCost: 0,
+//     shippingOptions: {
+//       air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+//       sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+//     },
 //     restockDate: "",
 //     lowStockThreshold: 5,
 //     imageFile: null,
@@ -153,7 +172,6 @@
 
 //   const fetchQuoteRequests = async () => {
 //     try {
-//       // Fetch all products with quote requests
 //       const res = await fetch("/api/products/quote/all");
 //       if (res.ok) {
 //         const data = await res.json();
@@ -214,6 +232,10 @@
 //       supplierName: item.supplierName || "",
 //       supplierDeliveryTime: item.supplierDeliveryTime || "10-21 business days",
 //       supplierShippingCost: item.supplierShippingCost || 0,
+//       shippingOptions: item.shippingOptions || {
+//         air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+//         sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+//       },
 //       restockDate: item.restockDate ? new Date(item.restockDate).toISOString().split('T')[0] : "",
 //       lowStockThreshold: item.lowStockThreshold || 5,
 //       imageFile: null,
@@ -235,6 +257,10 @@
 //       supplierName: "",
 //       supplierDeliveryTime: "10-21 business days",
 //       supplierShippingCost: 0,
+//       shippingOptions: {
+//         air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+//         sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+//       },
 //       restockDate: "",
 //       lowStockThreshold: 5,
 //       imageFile: null 
@@ -242,6 +268,51 @@
 //     setProductMessage(null);
 //     const fileInput = document.getElementById("file-upload-input") as HTMLInputElement;
 //     if (fileInput) fileInput.value = "";
+//   };
+
+//   // Helper function to update shipping options without TypeScript errors
+//   const updateShippingOption = (type: 'air' | 'sea', field: string, value: any) => {
+//     setProduct(prev => {
+//       const currentOptions = prev.shippingOptions || {
+//         air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+//         sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+//       };
+
+//       const updatedOption = {
+//         ...currentOptions[type],
+//         [field]: value
+//       };
+
+//       return {
+//         ...prev,
+//         shippingOptions: {
+//           ...currentOptions,
+//           [type]: updatedOption
+//         }
+//       };
+//     });
+//   };
+
+//   const toggleShippingOption = (type: 'air' | 'sea') => {
+//     setProduct(prev => {
+//       const currentOptions = prev.shippingOptions || {
+//         air: { enabled: true, deliveryTime: "3-7 business days", cost: 0, description: "Express shipping by air freight" },
+//         sea: { enabled: true, deliveryTime: "20-35 business days", cost: 0, description: "Standard shipping by sea freight" }
+//       };
+
+//       const currentEnabled = currentOptions[type]?.enabled ?? true;
+
+//       return {
+//         ...prev,
+//         shippingOptions: {
+//           ...currentOptions,
+//           [type]: {
+//             ...currentOptions[type],
+//             enabled: !currentEnabled
+//           }
+//         }
+//       };
+//     });
 //   };
 
 //   const handleProductSubmit = async (e: React.FormEvent) => {
@@ -259,19 +330,30 @@
 //     data.append("price", product.price);
 //     data.append("category", product.category);
     
-//     // Only append chassisNumber if it has a value
 //     if (product.chassisNumber && product.chassisNumber.trim()) {
 //       data.append("chassisNumber", product.chassisNumber.trim());
 //     }
 //     data.append("description", product.description.trim());
     
-//     // Inventory fields
 //     data.append("quantity", product.quantity.toString());
 //     data.append("supplierAvailable", product.supplierAvailable ? "true" : "false");
 //     if (product.supplierAvailable) {
 //       data.append("supplierName", product.supplierName);
 //       data.append("supplierDeliveryTime", product.supplierDeliveryTime);
 //       data.append("supplierShippingCost", product.supplierShippingCost.toString());
+      
+//       // Shipping options - Air and Sea
+//       if (product.shippingOptions) {
+//         data.append("shippingOptions[air][enabled]", product.shippingOptions.air?.enabled ? "true" : "false");
+//         data.append("shippingOptions[air][deliveryTime]", product.shippingOptions.air?.deliveryTime || "3-7 business days");
+//         data.append("shippingOptions[air][cost]", (product.shippingOptions.air?.cost || 0).toString());
+//         data.append("shippingOptions[air][description]", product.shippingOptions.air?.description || "Express shipping by air freight");
+        
+//         data.append("shippingOptions[sea][enabled]", product.shippingOptions.sea?.enabled ? "true" : "false");
+//         data.append("shippingOptions[sea][deliveryTime]", product.shippingOptions.sea?.deliveryTime || "20-35 business days");
+//         data.append("shippingOptions[sea][cost]", (product.shippingOptions.sea?.cost || 0).toString());
+//         data.append("shippingOptions[sea][description]", product.shippingOptions.sea?.description || "Standard shipping by sea freight");
+//       }
 //     }
 //     if (product.restockDate) {
 //       data.append("restockDate", product.restockDate);
@@ -356,7 +438,6 @@
 
 //       if (res.ok) {
 //         fetchQuoteRequests();
-//         // Refresh product list to update quote counts
 //         fetchInventory();
 //       } else {
 //         alert("Failed to update quote status");
@@ -389,7 +470,6 @@
 //     return ((index + 1) / flow.length) * 100;
 //   };
 
-//   // Helper function to render availability badge
 //   const getAvailabilityBadge = (item: DBProduct) => {
 //     const display = item.availabilityDisplay || {
 //       status: 'Unknown',
@@ -435,6 +515,27 @@
 //           <span className="text-[8px] text-yellow-400 ml-1">⚠️ Low Stock</span>
 //         )}
 //       </span>
+//     );
+//   };
+
+//   // Helper function to render shipping options safely
+//   const renderShippingOptions = (item: DBProduct) => {
+//     if (!item.availabilityDisplay?.shippingOptions || item.availabilityDisplay.shippingOptions.length === 0) {
+//       return null;
+//     }
+
+//     return (
+//       <div className="text-[8px] text-gray-500">
+//         {item.availabilityDisplay.shippingOptions.map((opt, idx) => {
+//           const total = item.availabilityDisplay?.shippingOptions?.length || 0;
+//           return (
+//             <span key={idx}>
+//               {opt.method === 'air' ? '✈️' : '🚢'} {opt.deliveryTime}
+//               {idx < total - 1 ? ' | ' : ''}
+//             </span>
+//           );
+//         })}
+//       </div>
 //     );
 //   };
 
@@ -563,7 +664,7 @@
 //               </div>
 //             )}
 
-//             {/* PRODUCT INPUT FORM - Same as before */}
+//             {/* PRODUCT INPUT FORM */}
 //             <form onSubmit={handleProductSubmit} className="bg-[#111827] border border-orange-500/10 rounded-2xl p-5 sm:p-8 space-y-5 shadow-xl relative">
 //               {isEditing && <div className="absolute top-0 left-0 right-0 h-1 bg-orange-500 rounded-t-2xl" />}
               
@@ -579,7 +680,6 @@
 //                 />
 //               </div>
 
-//               {/* Chassis Number - Now Optional */}
 //               <div>
 //                 <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
 //                   Chassis Number <span className="text-gray-500 text-[10px]">(Optional)</span>
@@ -594,7 +694,6 @@
 //                 <p className="text-[10px] text-gray-500 mt-1">Optional unique identifier for customer searches</p>
 //               </div>
 
-//               {/* Description */}
 //               <div>
 //                 <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Product Description</label>
 //                 <textarea 
@@ -708,6 +807,95 @@
 //                         />
 //                       </div>
 //                     </div>
+
+//                     {/* SHIPPING OPTIONS - Air and Sea Freight */}
+//                     <div className="border-t border-blue-500/20 pt-3 mt-2">
+//                       <h5 className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-2">Shipping Options</h5>
+                      
+//                       {/* Air Freight */}
+//                       <div className="border border-white/10 rounded-xl p-3 mb-2">
+//                         <div className="flex items-center justify-between">
+//                           <div className="flex items-center gap-2">
+//                             <span className="text-lg">✈️</span>
+//                             <span className="text-xs font-bold text-white">Air Freight</span>
+//                           </div>
+//                           <button
+//                             type="button"
+//                             onClick={() => toggleShippingOption('air')}
+//                             className={`relative w-10 h-5 rounded-full transition ${product.shippingOptions?.air?.enabled !== false ? 'bg-blue-500' : 'bg-white/20'}`}
+//                           >
+//                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition ${product.shippingOptions?.air?.enabled !== false ? 'right-0.5' : 'left-0.5'}`} />
+//                           </button>
+//                         </div>
+//                         {product.shippingOptions?.air?.enabled !== false && (
+//                           <div className="grid grid-cols-2 gap-2 mt-2">
+//                             <div>
+//                               <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Delivery Time</label>
+//                               <input
+//                                 type="text"
+//                                 placeholder="3-7 business days"
+//                                 value={product.shippingOptions?.air?.deliveryTime || "3-7 business days"}
+//                                 onChange={e => updateShippingOption('air', 'deliveryTime', e.target.value)}
+//                                 className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+//                               />
+//                             </div>
+//                             <div>
+//                               <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Cost (Ksh)</label>
+//                               <input
+//                                 type="number"
+//                                 min="0"
+//                                 placeholder="0"
+//                                 value={product.shippingOptions?.air?.cost || 0}
+//                                 onChange={e => updateShippingOption('air', 'cost', parseFloat(e.target.value) || 0)}
+//                                 className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+//                               />
+//                             </div>
+//                           </div>
+//                         )}
+//                       </div>
+
+//                       {/* Sea Freight */}
+//                       <div className="border border-white/10 rounded-xl p-3">
+//                         <div className="flex items-center justify-between">
+//                           <div className="flex items-center gap-2">
+//                             <span className="text-lg">🚢</span>
+//                             <span className="text-xs font-bold text-white">Sea Freight</span>
+//                           </div>
+//                           <button
+//                             type="button"
+//                             onClick={() => toggleShippingOption('sea')}
+//                             className={`relative w-10 h-5 rounded-full transition ${product.shippingOptions?.sea?.enabled !== false ? 'bg-blue-500' : 'bg-white/20'}`}
+//                           >
+//                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition ${product.shippingOptions?.sea?.enabled !== false ? 'right-0.5' : 'left-0.5'}`} />
+//                           </button>
+//                         </div>
+//                         {product.shippingOptions?.sea?.enabled !== false && (
+//                           <div className="grid grid-cols-2 gap-2 mt-2">
+//                             <div>
+//                               <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Delivery Time</label>
+//                               <input
+//                                 type="text"
+//                                 placeholder="20-35 business days"
+//                                 value={product.shippingOptions?.sea?.deliveryTime || "20-35 business days"}
+//                                 onChange={e => updateShippingOption('sea', 'deliveryTime', e.target.value)}
+//                                 className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+//                               />
+//                             </div>
+//                             <div>
+//                               <label className="block text-[8px] uppercase text-gray-400 tracking-wider mb-1">Cost (Ksh)</label>
+//                               <input
+//                                 type="number"
+//                                 min="0"
+//                                 placeholder="0"
+//                                 value={product.shippingOptions?.sea?.cost || 0}
+//                                 onChange={e => updateShippingOption('sea', 'cost', parseFloat(e.target.value) || 0)}
+//                                 className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-2 outline-none text-xs text-white focus:border-orange-500 transition"
+//                               />
+//                             </div>
+//                           </div>
+//                         )}
+//                       </div>
+//                     </div>
 //                   </div>
 //                 )}
 
@@ -780,7 +968,7 @@
 //               </button>
 //             </form>
 
-//             {/* LIVE INVENTORY DATA CONTENT DISPLAY - Same as before */}
+//             {/* LIVE INVENTORY DATA CONTENT DISPLAY */}
 //             <div className="space-y-4 pt-2">
 //               <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({dbProducts.length})</h2>
               
@@ -833,6 +1021,7 @@
 //                                 {item.availabilityDisplay?.message && (
 //                                   <span className="text-[9px] text-gray-500">{item.availabilityDisplay.message}</span>
 //                                 )}
+//                                 {renderShippingOptions(item)}
 //                               </div>
 //                             </td>
 //                             <td className="p-4">
@@ -1181,9 +1370,10 @@
 // }
 
 
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -1286,6 +1476,8 @@ export default function AdminDashboardPage() {
 
   // 1. PRODUCT & INVENTORY MANAGEMENT STATES
   const [dbProducts, setDbProducts] = useState<DBProduct[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState<"name" | "chassis" | "category" | "all">("all");
   const [isEditing, setIsEditing] = useState(false);
   const [product, setProduct] = useState<ProductForm>({
     name: "",
@@ -1317,6 +1509,32 @@ export default function AdminDashboardPage() {
   const [quoteRequests, setQuoteRequests] = useState<any[]>([]);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [selectedProductQuotes, setSelectedProductQuotes] = useState<any>(null);
+
+  // Filter products based on search query
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return dbProducts;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    return dbProducts.filter(product => {
+      switch (searchFilter) {
+        case "name":
+          return product.name.toLowerCase().includes(query);
+        case "chassis":
+          return (product.chassisNumber || "").toLowerCase().includes(query);
+        case "category":
+          return product.category.toLowerCase().includes(query);
+        case "all":
+        default:
+          return (
+            product.name.toLowerCase().includes(query) ||
+            (product.chassisNumber || "").toLowerCase().includes(query) ||
+            product.category.toLowerCase().includes(query) ||
+            (product.description || "").toLowerCase().includes(query)
+          );
+      }
+    });
+  }, [dbProducts, searchQuery, searchFilter]);
 
   const fetchInventory = async () => {
     try {
@@ -1555,6 +1773,7 @@ export default function AdminDashboardPage() {
         setProductMessage({ text: isEditing ? "Spare part modified successfully!" : "Spare part cataloged successfully!", isError: false });
         cancelEditMode();
         fetchInventory();
+        setSearchQuery(""); // Reset search after adding/editing
       } else {
         setProductMessage({ text: result.message || "Failed to catalog part.", isError: true });
       }
@@ -2153,7 +2372,54 @@ export default function AdminDashboardPage() {
 
             {/* LIVE INVENTORY DATA CONTENT DISPLAY */}
             <div className="space-y-4 pt-2">
-              <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({dbProducts.length})</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({filteredProducts.length})</h2>
+                  {searchQuery && (
+                    <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-full">
+                      {filteredProducts.length} of {dbProducts.length}
+                    </span>
+                  )}
+                </div>
+                
+                {/* Search Bar - Admin can search their added products */}
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:min-w-[200px]">
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl px-4 py-2 pl-9 outline-none text-sm text-white placeholder-gray-500 focus:border-orange-500 transition"
+                    />
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Search Filter Dropdown */}
+                  <select
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value as any)}
+                    className="bg-[#1a1f2e] border border-white/10 rounded-xl px-3 py-2 outline-none text-sm text-white focus:border-orange-500 transition appearance-none cursor-pointer"
+                  >
+                    <option value="all">All Fields</option>
+                    <option value="name">Part Name</option>
+                    <option value="chassis">Chassis Number</option>
+                    <option value="category">Category</option>
+                  </select>
+                </div>
+              </div>
               
               {/* DESKTOP VIEW MAPPED TO TABLE */}
               <div className="hidden sm:block bg-[#111827] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
@@ -2172,8 +2438,8 @@ export default function AdminDashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 font-medium">
-                      {dbProducts.length > 0 ? (
-                        dbProducts.map(item => (
+                      {filteredProducts.length > 0 ? (
+                        filteredProducts.map(item => (
                           <tr key={item._id} className="hover:bg-white/5 transition group">
                             <td className="p-4 w-20">
                               <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
@@ -2236,7 +2502,11 @@ export default function AdminDashboardPage() {
                           </tr>
                         ))
                       ) : (
-                        <tr><td colSpan={8} className="p-8 text-center text-gray-400">No registered physical components sitting inside the live MongoDB database cluster.</td></tr>
+                        <tr>
+                          <td colSpan={8} className="p-8 text-center text-gray-400">
+                            {searchQuery ? `No products match "${searchQuery}"` : "No registered physical components sitting inside the live MongoDB database cluster."}
+                          </td>
+                        </tr>
                       )}
                     </tbody>
                   </table>
@@ -2245,8 +2515,8 @@ export default function AdminDashboardPage() {
 
               {/* MOBILE VIEW GRID RESPONSIVE CARDS */}
               <div className="grid grid-cols-1 gap-4 sm:hidden">
-                {dbProducts.length > 0 ? (
-                  dbProducts.map(item => (
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map(item => (
                     <div key={item._id} className="bg-[#111827] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
                       <div className="flex gap-3 items-start">
                         <img src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-xl border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
@@ -2291,7 +2561,7 @@ export default function AdminDashboardPage() {
                   ))
                 ) : (
                   <div className="text-center py-12 bg-[#111827] border border-white/10 rounded-2xl text-gray-400 text-xs">
-                    No components sitting inside the cluster.
+                    {searchQuery ? `No products match "${searchQuery}"` : "No components sitting inside the cluster."}
                   </div>
                 )}
               </div>
