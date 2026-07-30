@@ -1,6 +1,6 @@
 // "use client";
 
-// import { useState, useEffect } from "react";
+// import { useState, useEffect, useMemo } from "react";
 // import { useRouter } from "next/navigation";
 // import Link from "next/link";
 
@@ -103,6 +103,8 @@
 
 //   // 1. PRODUCT & INVENTORY MANAGEMENT STATES
 //   const [dbProducts, setDbProducts] = useState<DBProduct[]>([]);
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [searchFilter, setSearchFilter] = useState<"name" | "chassis" | "category" | "all">("all");
 //   const [isEditing, setIsEditing] = useState(false);
 //   const [product, setProduct] = useState<ProductForm>({
 //     name: "",
@@ -134,6 +136,32 @@
 //   const [quoteRequests, setQuoteRequests] = useState<any[]>([]);
 //   const [quoteLoading, setQuoteLoading] = useState(false);
 //   const [selectedProductQuotes, setSelectedProductQuotes] = useState<any>(null);
+
+//   // Filter products based on search query
+//   const filteredProducts = useMemo(() => {
+//     if (!searchQuery.trim()) return dbProducts;
+    
+//     const query = searchQuery.toLowerCase().trim();
+    
+//     return dbProducts.filter(product => {
+//       switch (searchFilter) {
+//         case "name":
+//           return product.name.toLowerCase().includes(query);
+//         case "chassis":
+//           return (product.chassisNumber || "").toLowerCase().includes(query);
+//         case "category":
+//           return product.category.toLowerCase().includes(query);
+//         case "all":
+//         default:
+//           return (
+//             product.name.toLowerCase().includes(query) ||
+//             (product.chassisNumber || "").toLowerCase().includes(query) ||
+//             product.category.toLowerCase().includes(query) ||
+//             (product.description || "").toLowerCase().includes(query)
+//           );
+//       }
+//     });
+//   }, [dbProducts, searchQuery, searchFilter]);
 
 //   const fetchInventory = async () => {
 //     try {
@@ -372,6 +400,7 @@
 //         setProductMessage({ text: isEditing ? "Spare part modified successfully!" : "Spare part cataloged successfully!", isError: false });
 //         cancelEditMode();
 //         fetchInventory();
+//         setSearchQuery(""); // Reset search after adding/editing
 //       } else {
 //         setProductMessage({ text: result.message || "Failed to catalog part.", isError: true });
 //       }
@@ -970,7 +999,54 @@
 
 //             {/* LIVE INVENTORY DATA CONTENT DISPLAY */}
 //             <div className="space-y-4 pt-2">
-//               <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({dbProducts.length})</h2>
+//               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+//                 <div className="flex items-center gap-2">
+//                   <h2 className="text-xl font-extrabold tracking-tight text-white">Active Inventory Catalog ({filteredProducts.length})</h2>
+//                   {searchQuery && (
+//                     <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded-full">
+//                       {filteredProducts.length} of {dbProducts.length}
+//                     </span>
+//                   )}
+//                 </div>
+                
+//                 {/* Search Bar - Admin can search their added products */}
+//                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+//                   <div className="relative flex-1 sm:min-w-[200px]">
+//                     <input
+//                       type="text"
+//                       placeholder="Search products..."
+//                       value={searchQuery}
+//                       onChange={(e) => setSearchQuery(e.target.value)}
+//                       className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl px-4 py-2 pl-9 outline-none text-sm text-white placeholder-gray-500 focus:border-orange-500 transition"
+//                     />
+//                     <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+//                       <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+//                     </svg>
+//                     {searchQuery && (
+//                       <button
+//                         onClick={() => setSearchQuery("")}
+//                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition"
+//                       >
+//                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+//                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+//                         </svg>
+//                       </button>
+//                     )}
+//                   </div>
+                  
+//                   {/* Search Filter Dropdown */}
+//                   <select
+//                     value={searchFilter}
+//                     onChange={(e) => setSearchFilter(e.target.value as any)}
+//                     className="bg-[#1a1f2e] border border-white/10 rounded-xl px-3 py-2 outline-none text-sm text-white focus:border-orange-500 transition appearance-none cursor-pointer"
+//                   >
+//                     <option value="all">All Fields</option>
+//                     <option value="name">Part Name</option>
+//                     <option value="chassis">Chassis Number</option>
+//                     <option value="category">Category</option>
+//                   </select>
+//                 </div>
+//               </div>
               
 //               {/* DESKTOP VIEW MAPPED TO TABLE */}
 //               <div className="hidden sm:block bg-[#111827] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
@@ -989,8 +1065,8 @@
 //                       </tr>
 //                     </thead>
 //                     <tbody className="divide-y divide-white/5 font-medium">
-//                       {dbProducts.length > 0 ? (
-//                         dbProducts.map(item => (
+//                       {filteredProducts.length > 0 ? (
+//                         filteredProducts.map(item => (
 //                           <tr key={item._id} className="hover:bg-white/5 transition group">
 //                             <td className="p-4 w-20">
 //                               <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
@@ -1053,7 +1129,11 @@
 //                           </tr>
 //                         ))
 //                       ) : (
-//                         <tr><td colSpan={8} className="p-8 text-center text-gray-400">No registered physical components sitting inside the live MongoDB database cluster.</td></tr>
+//                         <tr>
+//                           <td colSpan={8} className="p-8 text-center text-gray-400">
+//                             {searchQuery ? `No products match "${searchQuery}"` : "No registered physical components sitting inside the live MongoDB database cluster."}
+//                           </td>
+//                         </tr>
 //                       )}
 //                     </tbody>
 //                   </table>
@@ -1062,8 +1142,8 @@
 
 //               {/* MOBILE VIEW GRID RESPONSIVE CARDS */}
 //               <div className="grid grid-cols-1 gap-4 sm:hidden">
-//                 {dbProducts.length > 0 ? (
-//                   dbProducts.map(item => (
+//                 {filteredProducts.length > 0 ? (
+//                   filteredProducts.map(item => (
 //                     <div key={item._id} className="bg-[#111827] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
 //                       <div className="flex gap-3 items-start">
 //                         <img src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-xl border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
@@ -1108,7 +1188,7 @@
 //                   ))
 //                 ) : (
 //                   <div className="text-center py-12 bg-[#111827] border border-white/10 rounded-2xl text-gray-400 text-xs">
-//                     No components sitting inside the cluster.
+//                     {searchQuery ? `No products match "${searchQuery}"` : "No components sitting inside the cluster."}
 //                   </div>
 //                 )}
 //               </div>
@@ -1371,11 +1451,36 @@
 
 
 
+
+
+
+
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+interface ProductImage {
+  url: string;
+  publicId?: string;
+  width?: number;
+  height?: number;
+  isPrimary?: boolean;
+}
+
+interface ProductVariant {
+  _id?: string;
+  name: string;
+  unit: string;
+  price: number;
+  quantity: number;
+  sku?: string;
+  isDefault?: boolean;
+  supplierAvailable?: boolean;
+  supplierName?: string;
+}
 
 interface ProductForm {
   id?: string;
@@ -1396,6 +1501,10 @@ interface ProductForm {
   restockDate: string;
   lowStockThreshold: number;
   imageFile: File | null;
+  imageFiles: File[];
+  existingImages: string[];
+  primaryImageIndex: number;
+  variants: ProductVariant[];
 }
 
 interface DBProduct {
@@ -1406,6 +1515,8 @@ interface DBProduct {
   chassisNumber?: string | null;
   description?: string;
   imageUrl: string;
+  images?: ProductImage[];
+  variants?: ProductVariant[];
   quantity: number;
   supplierAvailable: boolean;
   supplierName?: string;
@@ -1497,6 +1608,10 @@ export default function AdminDashboardPage() {
     restockDate: "",
     lowStockThreshold: 5,
     imageFile: null,
+    imageFiles: [],
+    existingImages: [],
+    primaryImageIndex: 0,
+    variants: []
   });
   const [productLoading, setProductLoading] = useState(false);
   const [productMessage, setProductMessage] = useState<{ text: string; isError: boolean } | null>(null);
@@ -1640,6 +1755,20 @@ export default function AdminDashboardPage() {
       restockDate: item.restockDate ? new Date(item.restockDate).toISOString().split('T')[0] : "",
       lowStockThreshold: item.lowStockThreshold || 5,
       imageFile: null,
+      imageFiles: [],
+      existingImages: item.images?.map(img => img.url) || [],
+      primaryImageIndex: item.images?.findIndex(img => img.isPrimary) || 0,
+      variants: item.variants?.map(v => ({
+        _id: v._id,
+        name: v.name,
+        unit: v.unit,
+        price: v.price,
+        quantity: v.quantity,
+        sku: v.sku || "",
+        isDefault: v.isDefault || false,
+        supplierAvailable: v.supplierAvailable || false,
+        supplierName: v.supplierName || ""
+      })) || []
     });
     setProductMessage(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1664,7 +1793,11 @@ export default function AdminDashboardPage() {
       },
       restockDate: "",
       lowStockThreshold: 5,
-      imageFile: null 
+      imageFile: null,
+      imageFiles: [],
+      existingImages: [],
+      primaryImageIndex: 0,
+      variants: []
     });
     setProductMessage(null);
     const fileInput = document.getElementById("file-upload-input") as HTMLInputElement;
@@ -1716,11 +1849,69 @@ export default function AdminDashboardPage() {
     });
   };
 
+  // Variant management functions
+  const addVariant = () => {
+    setProduct(prev => ({
+      ...prev,
+      variants: [
+        ...prev.variants,
+        {
+          name: "",
+          unit: "piece",
+          price: 0,
+          quantity: 0,
+          sku: "",
+          isDefault: prev.variants.length === 0,
+          supplierAvailable: false,
+          supplierName: ""
+        }
+      ]
+    }));
+  };
+
+  const removeVariant = (index: number) => {
+    setProduct(prev => {
+      const newVariants = prev.variants.filter((_, i) => i !== index);
+      // If we removed the default variant, set the first one as default
+      if (newVariants.length > 0 && !newVariants.some(v => v.isDefault)) {
+        newVariants[0].isDefault = true;
+      }
+      return { ...prev, variants: newVariants };
+    });
+  };
+
+  const updateVariant = (index: number, field: string, value: any) => {
+    setProduct(prev => {
+      const newVariants = [...prev.variants];
+      
+      // If setting isDefault to true, unset all others
+      if (field === 'isDefault' && value === true) {
+        newVariants.forEach((v, i) => {
+          v.isDefault = i === index;
+        });
+      } else {
+        newVariants[index] = { ...newVariants[index], [field]: value };
+      }
+      
+      return { ...prev, variants: newVariants };
+    });
+  };
+
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isEditing && !product.imageFile) {
-      setProductMessage({ text: "Please select an asset image file to upload.", isError: true });
+    
+    // Validate: either have an image or variants
+    if (!isEditing && !product.imageFile && product.imageFiles.length === 0) {
+      setProductMessage({ text: "Please select at least one image file to upload.", isError: true });
       return;
+    }
+
+    // Validate variants
+    for (const variant of product.variants) {
+      if (!variant.name || !variant.price) {
+        setProductMessage({ text: "Each variant must have a name and price.", isError: true });
+        return;
+      }
     }
 
     setProductLoading(true);
@@ -1736,6 +1927,7 @@ export default function AdminDashboardPage() {
     }
     data.append("description", product.description.trim());
     
+    // Inventory fields
     data.append("quantity", product.quantity.toString());
     data.append("supplierAvailable", product.supplierAvailable ? "true" : "false");
     if (product.supplierAvailable) {
@@ -1743,7 +1935,7 @@ export default function AdminDashboardPage() {
       data.append("supplierDeliveryTime", product.supplierDeliveryTime);
       data.append("supplierShippingCost", product.supplierShippingCost.toString());
       
-      // Shipping options - Air and Sea
+      // Shipping options
       if (product.shippingOptions) {
         data.append("shippingOptions[air][enabled]", product.shippingOptions.air?.enabled ? "true" : "false");
         data.append("shippingOptions[air][deliveryTime]", product.shippingOptions.air?.deliveryTime || "3-7 business days");
@@ -1761,8 +1953,38 @@ export default function AdminDashboardPage() {
     }
     data.append("lowStockThreshold", product.lowStockThreshold.toString());
     
+    // Multiple images
+    product.imageFiles.forEach(file => {
+      data.append("images", file);
+    });
+    
+    // Existing images (keep these)
+    product.existingImages.forEach(url => {
+      data.append("existingImages", url);
+    });
+    
+    // Primary image index
+    data.append("primaryImageIndex", product.primaryImageIndex.toString());
+    
+    // Single image (legacy support)
+    if (product.imageFile) {
+      data.append("image", product.imageFile);
+    }
+    
+    // Variants
+    product.variants.forEach((variant, index) => {
+      if (variant._id) {
+        data.append("variants[id]", variant._id);
+      }
+      data.append("variants[name]", variant.name);
+      data.append("variants[unit]", variant.unit);
+      data.append("variants[price]", variant.price.toString());
+      data.append("variants[quantity]", variant.quantity.toString());
+      data.append("variants[sku]", variant.sku || "");
+      data.append("variants[isDefault]", variant.isDefault ? "true" : "false");
+    });
+    
     if (product.id) data.append("id", product.id);
-    if (product.imageFile) data.append("image", product.imageFile);
 
     try {
       const targetMethod = isEditing ? "PUT" : "POST";
@@ -1773,7 +1995,7 @@ export default function AdminDashboardPage() {
         setProductMessage({ text: isEditing ? "Spare part modified successfully!" : "Spare part cataloged successfully!", isError: false });
         cancelEditMode();
         fetchInventory();
-        setSearchQuery(""); // Reset search after adding/editing
+        setSearchQuery("");
       } else {
         setProductMessage({ text: result.message || "Failed to catalog part.", isError: true });
       }
@@ -2106,6 +2328,258 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
+              {/* MULTIPLE IMAGES SECTION */}
+              <div className="border border-white/10 rounded-xl p-4 space-y-4">
+                <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                  Product Images
+                </h3>
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
+                      Upload Multiple Images
+                    </label>
+                    <input 
+                      type="file" 
+                      multiple
+                      accept="image/*" 
+                      onChange={e => {
+                        const files = Array.from(e.target.files || []);
+                        setProduct(prev => ({ ...prev, imageFiles: [...prev.imageFiles, ...files] }));
+                      }} 
+                      className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-500/10 file:text-orange-400 hover:file:bg-orange-500 hover:file:text-white p-2 border border-dashed border-white/10 rounded-xl bg-[#0b0f14] cursor-pointer transition" 
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1">Select multiple images at once (JPG, PNG, WebP)</p>
+                  </div>
+                  
+                  {/* Display uploaded images */}
+                  {product.imageFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {product.imageFiles.map((file, idx) => (
+                        <div key={idx} className="relative w-16 h-16 rounded-lg border border-white/10 overflow-hidden group">
+                          <img src={URL.createObjectURL(file)} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProduct(prev => ({
+                                ...prev,
+                                imageFiles: prev.imageFiles.filter((_, i) => i !== idx)
+                              }));
+                            }}
+                            className="absolute top-0 right-0 bg-red-500/80 text-white text-xs p-0.5 rounded-bl hover:bg-red-600"
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                          {idx === product.primaryImageIndex && (
+                            <span className="absolute bottom-0 left-0 right-0 bg-orange-500/80 text-[8px] text-white text-center font-bold">PRIMARY</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Existing images (when editing) */}
+                  {isEditing && product.existingImages.length > 0 && (
+                    <div className="border-t border-white/10 pt-3">
+                      <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
+                        Existing Images
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {product.existingImages.map((url, idx) => (
+                          <div key={idx} className="relative w-16 h-16 rounded-lg border border-white/10 overflow-hidden group">
+                            <img src={url} alt={`Existing ${idx}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProduct(prev => ({
+                                  ...prev,
+                                  existingImages: prev.existingImages.filter((_, i) => i !== idx)
+                                }));
+                              }}
+                              className="absolute top-0 right-0 bg-red-500/80 text-white text-xs p-0.5 rounded-bl hover:bg-red-600"
+                            >
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                            {idx === product.primaryImageIndex && (
+                              <span className="absolute bottom-0 left-0 right-0 bg-orange-500/80 text-[8px] text-white text-center font-bold">PRIMARY</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const totalImages = product.existingImages.length + product.imageFiles.length;
+                          const newIndex = Math.min(product.primaryImageIndex + 1, totalImages - 1);
+                          setProduct(prev => ({ ...prev, primaryImageIndex: newIndex }));
+                        }}
+                        className="mt-2 text-xs text-orange-400 hover:text-orange-300 transition"
+                      >
+                        Set Primary Image
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* VARIANTS SECTION (UNITS OF MEASURE WITH PRICES) */}
+              <div className="border border-white/10 rounded-xl p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-9h.01M15 15h.01M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+                    </svg>
+                    Product Variants (Units of Measure)
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    className="text-xs font-bold bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500 hover:text-white px-3 py-1.5 rounded-xl transition"
+                  >
+                    + Add Variant
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500">Different units (kg, piece, set, etc.) with individual prices and stock</p>
+                
+                {product.variants.map((variant, index) => (
+                  <div key={index} className="border border-white/10 rounded-xl p-3 space-y-3 bg-[#0b0f14] relative">
+                    <div className="flex items-start justify-between">
+                      <span className="text-[10px] text-gray-500 font-mono">Variant #{index + 1}</span>
+                      <div className="flex gap-2">
+                        <label className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                          <input
+                            type="checkbox"
+                            checked={variant.isDefault || false}
+                            onChange={(e) => updateVariant(index, 'isDefault', e.target.checked)}
+                            className="accent-orange-500"
+                          />
+                          Default
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removeVariant(index)}
+                          className="text-red-400 hover:text-red-300 text-xs"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">Variant Name</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g., Small Pack"
+                          value={variant.name}
+                          onChange={(e) => updateVariant(index, 'name', e.target.value)}
+                          className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">Unit</label>
+                        <select
+                          value={variant.unit}
+                          onChange={(e) => updateVariant(index, 'unit', e.target.value)}
+                          className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition appearance-none cursor-pointer"
+                        >
+                          <option value="piece">Piece</option>
+                          <option value="kg">Kilogram (kg)</option>
+                          <option value="g">Gram (g)</option>
+                          <option value="lb">Pound (lb)</option>
+                          <option value="oz">Ounce (oz)</option>
+                          <option value="m">Meter (m)</option>
+                          <option value="cm">Centimeter (cm)</option>
+                          <option value="mm">Millimeter (mm)</option>
+                          <option value="liter">Liter (L)</option>
+                          <option value="ml">Milliliter (ml)</option>
+                          <option value="each">Each</option>
+                          <option value="pair">Pair</option>
+                          <option value="set">Set</option>
+                          <option value="dozen">Dozen</option>
+                          <option value="box">Box</option>
+                          <option value="pack">Pack</option>
+                          <option value="custom">Custom</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">Price (Ksh)</label>
+                        <input
+                          type="number"
+                          required
+                          min="0"
+                          placeholder="0"
+                          value={variant.price}
+                          onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
+                          className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">Stock Quantity</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={variant.quantity}
+                          onChange={(e) => updateVariant(index, 'quantity', parseInt(e.target.value) || 0)}
+                          className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">SKU (Optional)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., BRAKE-PAD-001"
+                          value={variant.sku || ""}
+                          onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                          className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-2">
+                        <label className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
+                          Supplier Available
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => updateVariant(index, 'supplierAvailable', !variant.supplierAvailable)}
+                          className={`relative w-8 h-4 rounded-full transition ${variant.supplierAvailable ? 'bg-blue-500' : 'bg-white/20'}`}
+                        >
+                          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition ${variant.supplierAvailable ? 'right-0.5' : 'left-0.5'}`} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {variant.supplierAvailable && (
+                      <div>
+                        <label className="block text-[10px] uppercase text-gray-400 tracking-wider mb-1">Supplier Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., AutoParts Japan"
+                          value={variant.supplierName || ""}
+                          onChange={(e) => updateVariant(index, 'supplierName', e.target.value)}
+                          className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-2 outline-none text-sm text-white focus:border-orange-500 transition"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
               {/* INVENTORY MANAGEMENT SECTION */}
               <div className="border border-white/10 rounded-xl p-4 space-y-4">
                 <h3 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2">
@@ -2118,7 +2592,7 @@ export default function AdminDashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">
-                      Stock Quantity
+                      Stock Quantity {product.variants.length > 0 && "(Global)"}
                     </label>
                     <input
                       type="number"
@@ -2129,7 +2603,9 @@ export default function AdminDashboardPage() {
                       onChange={e => setProduct(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
                       className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-3 outline-none text-sm font-bold text-white focus:border-orange-500 transition"
                     />
-                    <p className="text-[10px] text-gray-500 mt-1">Current quantity in local inventory</p>
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      {product.variants.length > 0 ? "Global stock (will be overridden by variants)" : "Current quantity in local inventory"}
+                    </p>
                   </div>
                   
                   <div>
@@ -2353,18 +2829,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">{isEditing ? "Replace Reference Image (Optional)" : "Part Asset Reference Image"}</label>
-                <input 
-                  id="file-upload-input" 
-                  type="file" 
-                  required={!isEditing} 
-                  accept="image/*" 
-                  onChange={e => setProduct(prev => ({ ...prev, imageFile: e.target.files?.[0] || null }))} 
-                  className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-500/10 file:text-orange-400 hover:file:bg-orange-500 hover:file:text-white p-2 border border-dashed border-white/10 rounded-xl bg-[#0b0f14] cursor-pointer transition" 
-                />
-              </div>
-
               <button type="submit" disabled={productLoading} className="w-full bg-orange-500 hover:bg-orange-400 text-white font-extrabold py-3.5 rounded-xl text-sm transition disabled:opacity-50 shadow-lg cursor-pointer">
                 {productLoading ? "Syncing Operations..." : isEditing ? "Save Configuration Changes" : "Publish to Storefront"}
               </button>
@@ -2442,10 +2906,34 @@ export default function AdminDashboardPage() {
                         filteredProducts.map(item => (
                           <tr key={item._id} className="hover:bg-white/5 transition group">
                             <td className="p-4 w-20">
-                              <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
+                              {item.images && item.images.length > 0 ? (
+                                <div className="flex -space-x-2">
+                                  {item.images.slice(0, 3).map((img, idx) => (
+                                    <img 
+                                      key={idx} 
+                                      src={img.url} 
+                                      alt={item.name} 
+                                      className={`w-10 h-10 object-cover rounded-lg border-2 border-[#0b0f14] ${idx === 0 ? 'ring-2 ring-orange-500/50' : ''}`}
+                                      onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} 
+                                    />
+                                  ))}
+                                  {item.images.length > 3 && (
+                                    <span className="w-10 h-10 rounded-lg bg-[#1a1f2e] border-2 border-[#0b0f14] flex items-center justify-center text-[8px] font-bold text-gray-400">
+                                      +{item.images.length - 3}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
+                              )}
                             </td>
                             <td className="p-4">
                               <div className="font-bold text-white text-sm">{item.name}</div>
+                              {item.variants && item.variants.length > 0 && (
+                                <div className="text-[9px] text-blue-400 mt-0.5">
+                                  {item.variants.length} variant{item.variants.length > 1 ? 's' : ''}
+                                </div>
+                              )}
                               {item.description && (
                                 <div className="text-gray-400 text-xs mt-0.5 line-clamp-1">{item.description}</div>
                               )}
@@ -2519,9 +3007,28 @@ export default function AdminDashboardPage() {
                   filteredProducts.map(item => (
                     <div key={item._id} className="bg-[#111827] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
                       <div className="flex gap-3 items-start">
-                        <img src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-xl border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
+                        {item.images && item.images.length > 0 ? (
+                          <div className="flex -space-x-2">
+                            {item.images.slice(0, 2).map((img, idx) => (
+                              <img 
+                                key={idx} 
+                                src={img.url} 
+                                alt={item.name} 
+                                className={`w-12 h-12 object-cover rounded-xl border-2 border-[#0b0f14] ${idx === 0 ? 'ring-2 ring-orange-500/50' : ''}`}
+                                onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} 
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <img src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-xl border border-white/10 bg-[#0b0f14]" onError={e => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=100&q=80"; }} />
+                        )}
                         <div className="min-w-0 flex-1">
                           <h4 className="font-bold text-white text-sm line-clamp-2">{item.name}</h4>
+                          {item.variants && item.variants.length > 0 && (
+                            <div className="text-[9px] text-blue-400">
+                              {item.variants.length} variant{item.variants.length > 1 ? 's' : ''}
+                            </div>
+                          )}
                           {item.chassisNumber ? (
                             <span className="text-[10px] font-mono text-orange-400 block truncate">#{item.chassisNumber}</span>
                           ) : (

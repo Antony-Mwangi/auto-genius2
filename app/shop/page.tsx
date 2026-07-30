@@ -1,4 +1,5 @@
 
+
 // "use client";
 
 // import { useEffect, useState } from "react";
@@ -163,6 +164,12 @@
 //   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 //   const [isModalOpen, setIsModalOpen] = useState(false);
 
+//   // Quote Request States
+//   const [showQuoteModal, setShowQuoteModal] = useState(false);
+//   const [quoteProduct, setQuoteProduct] = useState<Product | null>(null);
+//   const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>("air");
+//   const [quoteMessage, setQuoteMessage] = useState<string>("");
+
 //   const WHATSAPP_NUMBER = "254714200500";
 
 //   useEffect(() => {
@@ -251,23 +258,62 @@
 //     document.body.style.overflow = 'unset';
 //   };
 
-//   const handleQuoteRequest = (product: Product) => {
+//   // Open Quote Modal with shipping options
+//   const openQuoteModal = (product: Product) => {
+//     setQuoteProduct(product);
+//     setSelectedShippingMethod("air");
+//     setQuoteMessage("");
+//     setShowQuoteModal(true);
+//     document.body.style.overflow = 'hidden';
+//   };
+
+//   const closeQuoteModal = () => {
+//     setShowQuoteModal(false);
+//     setQuoteProduct(null);
+//     document.body.style.overflow = 'unset';
+//   };
+
+//   // Handle quote request with shipping method
+//   const handleQuoteRequest = () => {
+//     if (!quoteProduct) return;
+
+//     // Get shipping details based on selected method
+//     let shippingDetails = "";
+//     if (quoteProduct.shippingOptions) {
+//       if (selectedShippingMethod === "air" && quoteProduct.shippingOptions.air) {
+//         shippingDetails = `
+// Shipping Method: Air Freight (Express)
+// Delivery Time: ${quoteProduct.shippingOptions.air.deliveryTime || '3-7 business days'}
+// Shipping Cost: Ksh ${(quoteProduct.shippingOptions.air.cost || 0).toLocaleString()}
+// Description: ${quoteProduct.shippingOptions.air.description || 'Express shipping by air freight'}`;
+//       } else if (selectedShippingMethod === "sea" && quoteProduct.shippingOptions.sea) {
+//         shippingDetails = `
+// Shipping Method: Sea Freight (Standard)
+// Delivery Time: ${quoteProduct.shippingOptions.sea.deliveryTime || '20-35 business days'}
+// Shipping Cost: Ksh ${(quoteProduct.shippingOptions.sea.cost || 0).toLocaleString()}
+// Description: ${quoteProduct.shippingOptions.sea.description || 'Standard shipping by sea freight'}`;
+//       }
+//     }
+
 //     const message = `
 // Hello Auto Genius Team,
 
 // I would like to request a quote for the following product:
 
-// Product: ${product.name}
-// Category: ${product.category}
-// Price: Ksh ${product.price.toLocaleString()}
-// Chassis Number: ${product.chassisNumber || 'N/A'}
-// Description: ${product.description || 'No description available'}
-// Status: ${product.availabilityStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Available from International Supplier'}
+// Product: ${quoteProduct.name}
+// Category: ${quoteProduct.category}
+// Price: Ksh ${quoteProduct.price.toLocaleString()}
+// Chassis Number: ${quoteProduct.chassisNumber || 'N/A'}
+// Description: ${quoteProduct.description || 'No description available'}
+// Status: ${quoteProduct.availabilityStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Available from International Supplier'}
+// ${shippingDetails}
+// ${quoteMessage ? `Additional Message: ${quoteMessage}` : ''}
 
 // I would like to know:
 // 1. Availability and lead time
 // 2. Total cost including shipping
 // 3. Any additional charges
+// 4. Payment terms
 
 // Please get back to me with a quotation.
 
@@ -276,12 +322,14 @@
 //     const encodedMessage = encodeURIComponent(message);
 //     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
 //     window.open(whatsappUrl, '_blank');
+//     closeQuoteModal();
 //   };
 
 //   useEffect(() => {
 //     const handleEsc = (e: KeyboardEvent) => {
 //       if (e.key === 'Escape') {
 //         closeProductDetails();
+//         closeQuoteModal();
 //       }
 //     };
 //     window.addEventListener('keydown', handleEsc);
@@ -334,6 +382,37 @@
 //         )}
 //       </span>
 //     );
+//   };
+
+//   // Helper function to get shipping options for the quote modal
+//   const getShippingOptions = () => {
+//     if (!quoteProduct?.shippingOptions) return [];
+    
+//     const options = [];
+//     if (quoteProduct.shippingOptions.air?.enabled !== false) {
+//       options.push({
+//         value: 'air',
+//         label: 'Air Freight (Express)',
+//         icon: <Icons.Airplane />,
+//         deliveryTime: quoteProduct.shippingOptions.air?.deliveryTime || '3-7 business days',
+//         cost: quoteProduct.shippingOptions.air?.cost || 0
+//       });
+//     }
+//     if (quoteProduct.shippingOptions.sea?.enabled !== false) {
+//       options.push({
+//         value: 'sea',
+//         label: 'Sea Freight (Standard)',
+//         icon: <Icons.Ship />,
+//         deliveryTime: quoteProduct.shippingOptions.sea?.deliveryTime || '20-35 business days',
+//         cost: quoteProduct.shippingOptions.sea?.cost || 0
+//       });
+//     }
+//     return options;
+//   };
+
+//   // Check if product should show quote button instead of add to cart
+//   const shouldShowQuoteButton = (product: Product) => {
+//     return !product.isPurchasable || product.availabilityStatus === 'INTERNATIONAL_SUPPLIER';
 //   };
 
 //   return (
@@ -517,22 +596,22 @@
 //                         <span className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white whitespace-nowrap">
 //                           Ksh {item.price.toLocaleString()}
 //                         </span>
-//                         {(item.isPurchasable && item.availabilityStatus !== 'OUT_OF_STOCK') ? (
-//                           <button 
-//                             onClick={() => addToCart(item)} 
-//                             className="bg-orange-500 hover:bg-orange-400 text-white text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition shadow-md shadow-orange-500/5 cursor-pointer flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
-//                           >
-//                             <Icons.Cart />
-//                             <span className="hidden xs:inline">{item.availabilityStatus === 'INTERNATIONAL_SUPPLIER' ? 'Order' : 'Add'}</span>
-//                           </button>
-//                         ) : (
+//                         {shouldShowQuoteButton(item) ? (
 //                           <button
-//                             onClick={() => handleQuoteRequest(item)}
+//                             onClick={() => openQuoteModal(item)}
 //                             className="bg-green-500/20 hover:bg-green-500/30 text-green-400 text-[9px] sm:text-[10px] md:text-xs font-extrabold px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition cursor-pointer flex items-center gap-1 sm:gap-1.5 whitespace-nowrap border border-green-500/20"
 //                           >
 //                             <Icons.WhatsApp />
 //                             <span className="hidden xs:inline">Request Quote</span>
 //                             <span className="xs:hidden">Quote</span>
+//                           </button>
+//                         ) : (
+//                           <button 
+//                             onClick={() => addToCart(item)} 
+//                             className="bg-orange-500 hover:bg-orange-400 text-white text-[10px] sm:text-xs font-extrabold px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition shadow-md shadow-orange-500/5 cursor-pointer flex items-center gap-1 sm:gap-1.5 whitespace-nowrap"
+//                           >
+//                             <Icons.Cart />
+//                             <span className="hidden xs:inline">Add</span>
 //                           </button>
 //                         )}
 //                       </div>
@@ -586,7 +665,7 @@
 //                   {selectedProduct.name}
 //                 </h2>
 
-//                 {/* Availability Status Sections with SVG Icons */}
+//                 {/* Availability Status Sections */}
 //                 {selectedProduct.availabilityStatus === 'IN_STOCK' && (
 //                   <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 sm:p-4">
 //                     <div className="flex items-center gap-2 sm:gap-3">
@@ -644,7 +723,7 @@
 //                         )}
 //                         {/* Request Quote button for International Supplier */}
 //                         <button
-//                           onClick={() => handleQuoteRequest(selectedProduct)}
+//                           onClick={() => openQuoteModal(selectedProduct)}
 //                           className="mt-3 text-[10px] sm:text-xs bg-green-500/20 hover:bg-green-500/30 text-green-400 font-extrabold px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 border border-green-500/20 w-full justify-center"
 //                         >
 //                           <Icons.WhatsApp />
@@ -673,7 +752,7 @@
 //                           className="mt-2 text-[10px] sm:text-xs text-green-400 hover:text-green-300 font-bold transition underline-offset-2 hover:underline flex items-center gap-2"
 //                           onClick={() => {
 //                             closeProductDetails();
-//                             setTimeout(() => handleQuoteRequest(selectedProduct), 300);
+//                             setTimeout(() => openQuoteModal(selectedProduct), 300);
 //                           }}
 //                         >
 //                           <Icons.WhatsApp />
@@ -710,7 +789,18 @@
 //                         Ksh {selectedProduct.price.toLocaleString()}
 //                       </p>
 //                     </div>
-//                     {selectedProduct.isPurchasable && selectedProduct.availabilityStatus !== 'OUT_OF_STOCK' ? (
+//                     {shouldShowQuoteButton(selectedProduct) ? (
+//                       <button 
+//                         onClick={() => {
+//                           closeProductDetails();
+//                           setTimeout(() => openQuoteModal(selectedProduct), 300);
+//                         }}
+//                         className="bg-green-500/20 hover:bg-green-500/30 text-green-400 font-extrabold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition cursor-pointer flex items-center gap-1.5 sm:gap-2 border border-green-500/20 text-xs sm:text-sm w-full xs:w-auto justify-center"
+//                       >
+//                         <Icons.WhatsApp />
+//                         Request Quote via WhatsApp
+//                       </button>
+//                     ) : (
 //                       <button 
 //                         onClick={() => {
 //                           addToCart(selectedProduct);
@@ -719,24 +809,98 @@
 //                         className="bg-orange-500 hover:bg-orange-400 text-white font-extrabold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition shadow-lg shadow-orange-500/20 cursor-pointer flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm w-full xs:w-auto justify-center"
 //                       >
 //                         <Icons.Cart />
-//                         {selectedProduct.availabilityStatus === 'INTERNATIONAL_SUPPLIER' ? 'Order Now' : 'Add to Cart'}
-//                       </button>
-//                     ) : (
-//                       <button 
-//                         onClick={() => {
-//                           closeProductDetails();
-//                           setTimeout(() => handleQuoteRequest(selectedProduct), 300);
-//                         }}
-//                         className="bg-green-500/20 hover:bg-green-500/30 text-green-400 font-extrabold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition cursor-pointer flex items-center gap-1.5 sm:gap-2 border border-green-500/20 text-xs sm:text-sm w-full xs:w-auto justify-center"
-//                       >
-//                         <Icons.WhatsApp />
-//                         Request Quote via WhatsApp
+//                         Add to Cart
 //                       </button>
 //                     )}
 //                   </div>
 //                 </div>
 //               </div>
 //             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* QUOTE MODAL WITH SHIPPING OPTIONS */}
+//       {showQuoteModal && quoteProduct && (
+//         <div 
+//           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+//           onClick={closeQuoteModal}
+//         >
+//           <div 
+//             className="bg-[#111827] border border-orange-500/20 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6"
+//             onClick={(e) => e.stopPropagation()}
+//           >
+//             <div className="flex items-center justify-between mb-4">
+//               <h2 className="text-xl font-black text-white">Request Quote</h2>
+//               <button onClick={closeQuoteModal} className="text-gray-400 hover:text-white transition">
+//                 <Icons.Close />
+//               </button>
+//             </div>
+
+//             <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-3 mb-4">
+//               <p className="text-sm font-bold text-white">{quoteProduct.name}</p>
+//               <p className="text-xs text-gray-400">
+//                 {quoteProduct.availabilityStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Available from International Supplier'}
+//               </p>
+//             </div>
+
+//             {/* Shipping Method Selection */}
+//             {getShippingOptions().length > 0 && (
+//               <div className="mb-4">
+//                 <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">
+//                   Preferred Shipping Method
+//                 </label>
+//                 <div className="space-y-2">
+//                   {getShippingOptions().map((option) => (
+//                     <button
+//                       key={option.value}
+//                       onClick={() => setSelectedShippingMethod(option.value)}
+//                       className={`w-full p-3 rounded-xl border transition flex items-center justify-between ${
+//                         selectedShippingMethod === option.value
+//                           ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+//                           : 'border-white/10 bg-[#0b0f14] text-gray-400 hover:border-white/20'
+//                       }`}
+//                     >
+//                       <div className="flex items-center gap-2">
+//                         {option.icon}
+//                         <span className="text-sm font-bold">{option.label}</span>
+//                       </div>
+//                       <div className="text-right">
+//                         <span className="text-xs text-gray-500">{option.deliveryTime}</span>
+//                         {option.cost > 0 && (
+//                           <span className="text-xs text-gray-500 block">+Ksh {option.cost.toLocaleString()}</span>
+//                         )}
+//                       </div>
+//                     </button>
+//                   ))}
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* Additional Message */}
+//             <div className="mb-4">
+//               <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">
+//                 Additional Message (Optional)
+//               </label>
+//               <textarea
+//                 placeholder="Any specific requirements or questions..."
+//                 value={quoteMessage}
+//                 onChange={(e) => setQuoteMessage(e.target.value)}
+//                 className="w-full bg-[#0b0f14] border border-white/10 rounded-xl p-3 text-sm text-white focus:border-orange-500 transition outline-none min-h-[80px] resize-y"
+//               />
+//             </div>
+
+//             <button
+//               onClick={handleQuoteRequest}
+//               className="w-full bg-green-500 hover:bg-green-400 text-white font-extrabold py-3.5 rounded-xl text-sm transition flex items-center justify-center gap-2"
+//             >
+//               <Icons.WhatsApp />
+//               Send Quote Request on WhatsApp
+//             </button>
+
+//             <p className="text-[10px] text-gray-500 text-center mt-3">
+//               You will be redirected to WhatsApp to send your request
+//             </p>
 //           </div>
 //         </div>
 //       )}
@@ -748,6 +912,61 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -755,7 +974,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/app/components/Footer";
 
-// SVG Icons
+// SVG Icons (same as before - keep all icons)
 const Icons = {
   WhatsApp: () => (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -846,8 +1065,46 @@ const Icons = {
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
       <circle cx="12" cy="12" r="3"/>
     </svg>
+  ),
+  ImageIcon: () => (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <polyline points="21 15 16 10 5 21"/>
+    </svg>
+  ),
+  ChevronLeft: () => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  ),
+  ChevronRight: () => (
+    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
   )
 };
+
+// Interfaces (same as before)
+interface ProductImage {
+  url: string;
+  publicId?: string;
+  width?: number;
+  height?: number;
+  isPrimary?: boolean;
+}
+
+interface ProductVariant {
+  _id?: string;
+  name: string;
+  unit: string;
+  price: number;
+  quantity: number;
+  sku?: string;
+  isDefault?: boolean;
+  supplierAvailable?: boolean;
+  supplierName?: string;
+}
 
 interface Product {
   _id: string;
@@ -857,6 +1114,8 @@ interface Product {
   chassisNumber?: string | null;
   description?: string;
   imageUrl: string;
+  images?: ProductImage[];
+  variants?: ProductVariant[];
   createdAt: string;
   quantity: number;
   supplierAvailable: boolean;
@@ -892,11 +1151,20 @@ interface Product {
   };
   isPurchasable?: boolean;
   isLowStock?: boolean;
+  displayPrice?: number;
+  defaultVariant?: ProductVariant;
+  hasVariants?: boolean;
+  priceRange?: {
+    min: number;
+    max: number;
+    range: string;
+  };
 }
 
 interface CartItem {
   product: Product;
   quantity: number;
+  selectedVariant?: ProductVariant;
 }
 
 export default function ShopPage() {
@@ -911,12 +1179,14 @@ export default function ShopPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Quote Request States
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteProduct, setQuoteProduct] = useState<Product | null>(null);
   const [selectedShippingMethod, setSelectedShippingMethod] = useState<string>("air");
   const [quoteMessage, setQuoteMessage] = useState<string>("");
+  const [selectedVariantForQuote, setSelectedVariantForQuote] = useState<ProductVariant | null>(null);
 
   const WHATSAPP_NUMBER = "254714200500";
 
@@ -964,14 +1234,25 @@ export default function ShopPage() {
         const chassisMatch = p.chassisNumber ? p.chassisNumber.toLowerCase().includes(term) : false;
         const nameMatch = p.name.toLowerCase().includes(term);
         const descMatch = p.description ? p.description.toLowerCase().includes(term) : false;
-        return chassisMatch || nameMatch || descMatch;
+        const variantMatch = p.variants?.some(v => v.name.toLowerCase().includes(term)) || false;
+        return chassisMatch || nameMatch || descMatch || variantMatch;
       });
     }
     
     setFilteredProducts(result);
   }, [products, selectedCategory, searchTerm]);
 
-  const addToCart = (product: Product) => {
+  // Get product's main price (not variant price)
+  const getProductPrice = (product: Product): number => {
+    return product.price || 0;
+  };
+
+  // Get price display - always shows the product's main price
+  const getPriceDisplay = (product: Product): string => {
+    return `Ksh ${getProductPrice(product).toLocaleString()}`;
+  };
+
+  const addToCart = (product: Product, variant?: ProductVariant) => {
     if (!product.isPurchasable) {
       alert("This product is currently not available for purchase.");
       return;
@@ -980,13 +1261,26 @@ export default function ShopPage() {
     const savedCart = localStorage.getItem("autogenius_cart");
     let currentCart: CartItem[] = savedCart ? JSON.parse(savedCart) : [];
     
-    const existingItem = currentCart.find((item) => item.product._id === product._id);
+    const cartItem: CartItem = {
+      product,
+      quantity: 1,
+      selectedVariant: variant
+    };
+
+    const existingItem = currentCart.find((item) => 
+      item.product._id === product._id && 
+      (!variant || (item.selectedVariant?._id === variant._id))
+    );
+    
     if (existingItem) {
       currentCart = currentCart.map((item) =>
-        item.product._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+        item.product._id === product._id && 
+        (!variant || (item.selectedVariant?._id === variant._id))
+          ? { ...item, quantity: item.quantity + 1 } 
+          : item
       );
     } else {
-      currentCart.push({ product, quantity: 1 });
+      currentCart.push(cartItem);
     }
 
     localStorage.setItem("autogenius_cart", JSON.stringify(currentCart));
@@ -996,6 +1290,7 @@ export default function ShopPage() {
 
   const openProductDetails = (product: Product) => {
     setSelectedProduct(product);
+    setCurrentImageIndex(0);
     setIsModalOpen(true);
     document.body.style.overflow = 'hidden';
   };
@@ -1003,12 +1298,25 @@ export default function ShopPage() {
   const closeProductDetails = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
+    setCurrentImageIndex(0);
     document.body.style.overflow = 'unset';
   };
 
-  // Open Quote Modal with shipping options
-  const openQuoteModal = (product: Product) => {
+  const nextImage = () => {
+    if (selectedProduct?.images) {
+      setCurrentImageIndex((prev) => (prev + 1) % selectedProduct.images!.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (selectedProduct?.images) {
+      setCurrentImageIndex((prev) => (prev - 1 + selectedProduct.images!.length) % selectedProduct.images!.length);
+    }
+  };
+
+  const openQuoteModal = (product: Product, variant?: ProductVariant) => {
     setQuoteProduct(product);
+    setSelectedVariantForQuote(variant || null);
     setSelectedShippingMethod("air");
     setQuoteMessage("");
     setShowQuoteModal(true);
@@ -1018,14 +1326,19 @@ export default function ShopPage() {
   const closeQuoteModal = () => {
     setShowQuoteModal(false);
     setQuoteProduct(null);
+    setSelectedVariantForQuote(null);
     document.body.style.overflow = 'unset';
   };
 
-  // Handle quote request with shipping method
   const handleQuoteRequest = () => {
     if (!quoteProduct) return;
 
-    // Get shipping details based on selected method
+    const variantInfo = selectedVariantForQuote ? `
+Variant: ${selectedVariantForQuote.name}
+Unit: ${selectedVariantForQuote.unit}
+Price: Ksh ${selectedVariantForQuote.price.toLocaleString()}
+Stock: ${selectedVariantForQuote.quantity} units` : '';
+
     let shippingDetails = "";
     if (quoteProduct.shippingOptions) {
       if (selectedShippingMethod === "air" && quoteProduct.shippingOptions.air) {
@@ -1050,10 +1363,11 @@ I would like to request a quote for the following product:
 
 Product: ${quoteProduct.name}
 Category: ${quoteProduct.category}
-Price: Ksh ${quoteProduct.price.toLocaleString()}
+Price: ${getPriceDisplay(quoteProduct)}
 Chassis Number: ${quoteProduct.chassisNumber || 'N/A'}
 Description: ${quoteProduct.description || 'No description available'}
 Status: ${quoteProduct.availabilityStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Available from International Supplier'}
+${variantInfo}
 ${shippingDetails}
 ${quoteMessage ? `Additional Message: ${quoteMessage}` : ''}
 
@@ -1132,7 +1446,6 @@ Thank you!`.trim();
     );
   };
 
-  // Helper function to get shipping options for the quote modal
   const getShippingOptions = () => {
     if (!quoteProduct?.shippingOptions) return [];
     
@@ -1158,9 +1471,16 @@ Thank you!`.trim();
     return options;
   };
 
-  // Check if product should show quote button instead of add to cart
   const shouldShowQuoteButton = (product: Product) => {
     return !product.isPurchasable || product.availabilityStatus === 'INTERNATIONAL_SUPPLIER';
+  };
+
+  const getProductImage = (product: Product): string => {
+    if (product.images && product.images.length > 0) {
+      const primary = product.images.find(img => img.isPrimary);
+      return primary ? primary.url : product.images[0].url;
+    }
+    return product.imageUrl;
   };
 
   return (
@@ -1212,7 +1532,7 @@ Thank you!`.trim();
           <div className="relative">
             <input
               type="text"
-              placeholder="Search by chassis number, part name, or description..."
+              placeholder="Search by chassis number, part name, description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-[#1a1f2e] border border-white/10 rounded-xl p-2.5 sm:p-3 pl-8 sm:pl-10 outline-none text-sm sm:text-base text-white placeholder-gray-500 focus:border-orange-500 transition"
@@ -1287,13 +1607,18 @@ Thank you!`.trim();
                       onClick={() => openProductDetails(item)}
                     >
                       <img 
-                        src={item.imageUrl} 
+                        src={getProductImage(item)} 
                         alt={item.name} 
                         className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
                         }}
                       />
+                      {item.images && item.images.length > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">
+                          {item.images.length} 📷
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <span className="bg-orange-500 text-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-lg flex items-center gap-1.5">
                           <Icons.ViewDetails />
@@ -1323,6 +1648,11 @@ Thank you!`.trim();
                             #{item.chassisNumber}
                           </p>
                         )}
+                        {item.variants && item.variants.length > 0 && (
+                          <p className="text-[8px] sm:text-[9px] text-blue-400 mt-0.5">
+                            {item.variants.length} variant{item.variants.length > 1 ? 's' : ''} available
+                          </p>
+                        )}
                         {item.availabilityDisplay?.message && (
                           <p className="text-[8px] sm:text-[9px] text-gray-400 mt-0.5 line-clamp-1">
                             {item.availabilityDisplay.message}
@@ -1342,7 +1672,7 @@ Thank you!`.trim();
                       </div>
                       <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-white/5 gap-1 sm:gap-2">
                         <span className="text-xs sm:text-sm md:text-base lg:text-lg font-black text-white whitespace-nowrap">
-                          Ksh {item.price.toLocaleString()}
+                          {getPriceDisplay(item)}
                         </span>
                         {shouldShowQuoteButton(item) ? (
                           <button
@@ -1372,7 +1702,7 @@ Thank you!`.trim();
         )}
       </section>
 
-      {/* PRODUCT DETAILS MODAL */}
+      {/* PRODUCT DETAILS MODAL - Same as before but with product price */}
       {isModalOpen && selectedProduct && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
@@ -1382,23 +1712,86 @@ Thank you!`.trim();
             className="bg-[#111827] border border-orange-500/20 rounded-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <button 
-              onClick={closeProductDetails}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 p-1.5 sm:p-2 bg-black/50 hover:bg-black/70 rounded-xl text-white transition cursor-pointer"
-            >
-              <Icons.Close />
-            </button>
+            <div className="sticky top-0 z-10 bg-[#111827]/95 backdrop-blur-sm p-2 sm:p-4 border-b border-white/5 flex items-center justify-between">
+              <button 
+                onClick={closeProductDetails}
+                className="p-1.5 sm:p-2 bg-black/50 hover:bg-black/70 rounded-xl text-white transition cursor-pointer"
+              >
+                <Icons.Close />
+              </button>
+              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                Product Details
+              </span>
+              <div className="w-8"></div>
+            </div>
 
             <div className="flex flex-col md:flex-row">
-              <div className="md:w-1/2 bg-[#0b0f14] p-3 sm:p-4 md:p-6 flex items-center justify-center">
-                <img 
-                  src={selectedProduct.imageUrl} 
-                  alt={selectedProduct.name} 
-                  className="w-full h-auto max-h-[250px] sm:max-h-[300px] md:max-h-[400px] object-contain rounded-xl"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
-                  }}
-                />
+              <div className="md:w-1/2 bg-[#0b0f14] p-3 sm:p-4 md:p-6">
+                <div className="relative">
+                  {selectedProduct.images && selectedProduct.images.length > 0 ? (
+                    <>
+                      <img 
+                        src={selectedProduct.images[currentImageIndex].url} 
+                        alt={selectedProduct.name} 
+                        className="w-full h-auto max-h-[250px] sm:max-h-[300px] md:max-h-[400px] object-contain rounded-xl"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
+                        }}
+                      />
+                      {selectedProduct.images.length > 1 && (
+                        <>
+                          <button
+                            onClick={prevImage}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white p-1.5 sm:p-2 rounded-full transition"
+                          >
+                            <Icons.ChevronLeft />
+                          </button>
+                          <button
+                            onClick={nextImage}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white p-1.5 sm:p-2 rounded-full transition"
+                          >
+                            <Icons.ChevronRight />
+                          </button>
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                            {selectedProduct.images.map((_, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => setCurrentImageIndex(idx)}
+                                className={`w-1.5 h-1.5 rounded-full transition ${
+                                  idx === currentImageIndex ? 'bg-orange-500' : 'bg-white/30'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <img 
+                      src={selectedProduct.imageUrl} 
+                      alt={selectedProduct.name} 
+                      className="w-full h-auto max-h-[250px] sm:max-h-[300px] md:max-h-[400px] object-contain rounded-xl"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
+                      }}
+                    />
+                  )}
+                  {selectedProduct.images && selectedProduct.images.length > 1 && (
+                    <div className="flex gap-1 mt-2 overflow-x-auto pb-1">
+                      {selectedProduct.images.map((img, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${
+                            idx === currentImageIndex ? 'border-orange-500' : 'border-white/10'
+                          }`}
+                        >
+                          <img src={img.url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="md:w-1/2 p-4 sm:p-6 md:p-8 flex flex-col gap-3 sm:gap-4">
@@ -1413,7 +1806,46 @@ Thank you!`.trim();
                   {selectedProduct.name}
                 </h2>
 
-                {/* Availability Status Sections */}
+                {/* Variants Selection */}
+                {selectedProduct.variants && selectedProduct.variants.length > 0 && (
+                  <div className="bg-[#1a1f2e] border border-white/10 rounded-xl p-3">
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-2">Available Variants</p>
+                    <div className="space-y-2">
+                      {selectedProduct.variants.map((variant) => (
+                        <div key={variant._id || variant.name} className="flex items-center justify-between p-2 bg-[#0b0f14] rounded-lg border border-white/5">
+                          <div>
+                            <p className="text-xs font-bold text-white">{variant.name}</p>
+                            <p className="text-[9px] text-gray-400">
+                              Unit: {variant.unit} • Stock: {variant.quantity}
+                              {variant.isDefault && <span className="text-orange-400 ml-2">(Default)</span>}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-white">Ksh {variant.price.toLocaleString()}</span>
+                            {selectedProduct.isPurchasable ? (
+                              <button
+                                onClick={() => addToCart(selectedProduct, variant)}
+                                className="bg-orange-500 hover:bg-orange-400 text-white text-[10px] font-bold px-2 py-1 rounded-lg transition"
+                              >
+                                Add
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => openQuoteModal(selectedProduct, variant)}
+                                className="bg-green-500/20 hover:bg-green-500/30 text-green-400 text-[10px] font-bold px-2 py-1 rounded-lg transition border border-green-500/20 flex items-center gap-1"
+                              >
+                                <Icons.WhatsApp />
+                                Quote
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Availability Status Sections - Same as before */}
                 {selectedProduct.availabilityStatus === 'IN_STOCK' && (
                   <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center gap-2 sm:gap-3">
@@ -1469,7 +1901,6 @@ Thank you!`.trim();
                             </div>
                           </div>
                         )}
-                        {/* Request Quote button for International Supplier */}
                         <button
                           onClick={() => openQuoteModal(selectedProduct)}
                           className="mt-3 text-[10px] sm:text-xs bg-green-500/20 hover:bg-green-500/30 text-green-400 font-extrabold px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 border border-green-500/20 w-full justify-center"
@@ -1534,7 +1965,7 @@ Thank you!`.trim();
                     <div>
                       <p className="text-[9px] sm:text-xs text-gray-400 font-semibold uppercase tracking-wider">Price</p>
                       <p className="text-xl sm:text-2xl font-black text-white">
-                        Ksh {selectedProduct.price.toLocaleString()}
+                        {getPriceDisplay(selectedProduct)}
                       </p>
                     </div>
                     {shouldShowQuoteButton(selectedProduct) ? (
@@ -1568,7 +1999,7 @@ Thank you!`.trim();
         </div>
       )}
 
-      {/* QUOTE MODAL WITH SHIPPING OPTIONS */}
+      {/* QUOTE MODAL - Same as before */}
       {showQuoteModal && quoteProduct && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
@@ -1590,9 +2021,13 @@ Thank you!`.trim();
               <p className="text-xs text-gray-400">
                 {quoteProduct.availabilityStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Available from International Supplier'}
               </p>
+              {selectedVariantForQuote && (
+                <p className="text-xs text-blue-400 mt-1">
+                  Variant: {selectedVariantForQuote.name} ({selectedVariantForQuote.unit}) - Ksh {selectedVariantForQuote.price.toLocaleString()}
+                </p>
+              )}
             </div>
 
-            {/* Shipping Method Selection */}
             {getShippingOptions().length > 0 && (
               <div className="mb-4">
                 <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">
@@ -1625,7 +2060,6 @@ Thank you!`.trim();
               </div>
             )}
 
-            {/* Additional Message */}
             <div className="mb-4">
               <label className="block text-xs font-bold uppercase text-gray-400 mb-2 tracking-wider">
                 Additional Message (Optional)
