@@ -4,6 +4,35 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion, Variants } from "framer-motion";
+
+// Animation variants with proper typing
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { scale: 0.9, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+  },
+};
 
 // 1. Move the form and content inside a separate component that safely reads hooks
 function LoginFormContent() {
@@ -45,7 +74,6 @@ function LoginFormContent() {
 
       setSuccess(true);
       
-      // CHANGED: Prioritize the dynamic destination returned from the API route (e.g., /dashboard or /admin/dashboard)
       const destination = data.redirectTo || callbackUrl || "/dashboard";
 
       setTimeout(() => {
@@ -60,40 +88,69 @@ function LoginFormContent() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-10 text-center lg:text-left">
-        <h2 className="text-4xl font-bold">Welcome Back</h2>
-        <p className="mt-3 text-gray-400">Login to your account to continue.</p>
-      </div>
+    <motion.div 
+      className="w-full max-w-md"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants} className="mb-10 text-center lg:text-left">
+        <motion.h2 
+          className="text-4xl font-extrabold text-gray-900"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          Welcome Back
+        </motion.h2>
+        <motion.p 
+          className="mt-3 text-gray-600"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          Login to your account to continue.
+        </motion.p>
+      </motion.div>
 
       {error && (
-        <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-400">
+        <motion.div 
+          className="mb-6 rounded-xl bg-red-50 border-2 border-red-200 p-4 text-sm text-red-700"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           {error}
-        </div>
+        </motion.div>
       )}
       {success && (
-        <div className="mb-6 rounded-xl bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-400">
+        <motion.div 
+          className="mb-6 rounded-xl bg-green-50 border-2 border-green-200 p-4 text-sm text-green-700"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           Login successful! Redirecting to your dashboard...
-        </div>
+        </motion.div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="mb-2 block text-sm text-gray-300">Email Address</label>
+        <motion.div variants={itemVariants}>
+          <label className="mb-2 block text-sm font-semibold text-gray-700">Email Address</label>
           <input
             type="email"
             required
             placeholder="example@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#111827] px-4 py-3 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 text-white"
+            className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 text-gray-900 placeholder-gray-400"
           />
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div variants={itemVariants}>
           <div className="mb-2 flex justify-between">
-            <label className="text-sm text-gray-300">Password</label>
-            <Link href="/forgot-password" className="text-sm text-orange-400 hover:text-orange-300">
+            <label className="text-sm font-semibold text-gray-700">Password</label>
+            <Link href="/forgot-password" className="text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors">
               Forgot Password?
             </Link>
           </div>
@@ -103,98 +160,159 @@ function LoginFormContent() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#111827] px-4 py-3 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 text-white"
+            className="w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-3 outline-none transition-all duration-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 text-gray-900 placeholder-gray-400"
           />
-        </div>
+        </motion.div>
 
-        <button
+        <motion.button
           type="submit"
           disabled={loading || success}
-          className="w-full rounded-xl bg-orange-500 py-3 font-semibold transition hover:bg-orange-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
+          className="w-full rounded-xl bg-orange-500 py-3.5 font-semibold text-white transition-all duration-200 hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-base"
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          variants={itemVariants}
         >
           {loading ? "Signing In..." : "Sign In"}
-        </button>
+        </motion.button>
       </form>
 
-      <div className="my-8 flex items-center gap-4">
-        <div className="h-px flex-1 bg-white/10"></div>
-        <span className="text-sm text-gray-500">OR</span>
-        <div className="h-px flex-1 bg-white/10"></div>
-      </div>
-
-      <Link
-        href="/shop"
-        className="block rounded-xl border border-orange-500 py-3 text-center font-semibold text-orange-400 transition hover:bg-orange-500 hover:text-white"
+      <motion.div 
+        className="my-8 flex items-center gap-4"
+        variants={itemVariants}
       >
-        Continue as Guest
-      </Link>
+        <div className="h-px flex-1 bg-gray-300"></div>
+        <span className="text-sm text-gray-500 font-medium">OR</span>
+        <div className="h-px flex-1 bg-gray-300"></div>
+      </motion.div>
 
-      <p className="mt-8 text-center text-gray-400">
+      <motion.div variants={itemVariants}>
+        <Link
+          href="/shop"
+          className="block rounded-xl border-2 border-orange-500 py-3.5 text-center font-semibold text-orange-600 transition-all duration-200 hover:bg-orange-500 hover:text-white hover:shadow-lg hover:shadow-orange-200"
+        >
+          Continue as Guest
+        </Link>
+      </motion.div>
+
+      <motion.p 
+        className="mt-8 text-center text-gray-600"
+        variants={itemVariants}
+      >
         Don't have an account?
-        <Link href="/register" className="ml-2 font-semibold text-orange-400 hover:text-orange-300">
+        <Link href="/register" className="ml-2 font-semibold text-orange-600 hover:text-orange-700 transition-colors">
           Create Account
         </Link>
-      </p>
+      </motion.p>
 
-      <p className="mt-12 text-center text-sm text-gray-500">
+      <motion.p 
+        className="mt-12 text-center text-sm text-gray-500"
+        variants={itemVariants}
+      >
         © {new Date().getFullYear()} AUTOGENIUS Spare Parts LTD
-      </p>
-    </div>
+      </motion.p>
+    </motion.div>
   );
 }
 
 // 2. Main Page layout wraps the sub-component inside a <Suspense> boundary
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#0b0f14] text-white">
+    <main className="min-h-screen bg-white">
       <div className="grid min-h-screen lg:grid-cols-2">
         
-        {/* LEFT SIDE */}
-        <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-[#111827] to-[#0b0f14] p-16 border-r border-white/10">
-          <div>
+        {/* LEFT SIDE - Now with White Background */}
+        <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-orange-50 to-white p-16 border-r border-gray-200">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             <div className="flex items-center gap-4">
-              <Image
-                src="/logo.jpeg"
-                alt="Autogenius"
-                width={60}
-                height={60}
-                className="rounded-full"
-              />
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Image
+                  src="/logo.jpeg"
+                  alt="Autogenius"
+                  width={60}
+                  height={60}
+                  className="rounded-full border-2 border-orange-500/30"
+                />
+              </motion.div>
               <div>
-                <h2 className="text-2xl font-bold text-orange-500 tracking-wider">
+                <h2 className="text-2xl font-bold text-orange-600 tracking-wider">
                   AUTOGENIUS
                 </h2>
-                <p className="text-gray-400 text-sm">Spare Parts LTD</p>
+                <p className="text-gray-500 text-sm">Spare Parts LTD</p>
               </div>
             </div>
 
-            <h1 className="mt-16 text-5xl font-bold leading-tight">
+            <motion.h1 
+              className="mt-16 text-5xl font-extrabold leading-tight text-gray-900"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               Genuine Spare Parts
               <br />
-              <span className="text-orange-500">For Every Journey</span>
-            </h1>
+              <motion.span 
+                className="text-orange-600 inline-block"
+                animate={{ 
+                  color: ["#ea580c", "#f97316", "#ea580c"],
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                For Every Journey
+              </motion.span>
+            </motion.h1>
 
-            <p className="mt-8 max-w-lg text-lg text-gray-400 leading-8">
+            <motion.p 
+              className="mt-8 max-w-lg text-lg text-gray-600 leading-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               Find genuine automotive spare parts for Toyota, Nissan, Mazda, Subaru, Honda, Mitsubishi and many more. Quality guaranteed with fast delivery across Kenya.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-orange-500/20 bg-white/5 p-6">
-              <h3 className="font-semibold text-orange-400">Why Choose Us?</h3>
-              <ul className="mt-4 space-y-3 text-gray-300">
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Genuine OEM Spare Parts</li>
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Affordable Prices</li>
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Fast Countrywide Delivery</li>
-                <li className="flex items-center gap-2"><span className="text-orange-500">✔</span> Professional Customer Support</li>
+          <motion.div 
+            className="space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <motion.div 
+              className="rounded-2xl border-2 border-orange-200 bg-white p-6 shadow-md hover:shadow-xl transition-shadow duration-300"
+              whileHover={{ scale: 1.02 }}
+            >
+              <h3 className="font-bold text-orange-600 text-lg">Why Choose Us?</h3>
+              <ul className="mt-4 space-y-3 text-gray-700">
+                {[
+                  "Genuine OEM Spare Parts",
+                  "Affordable Prices",
+                  "Fast Countrywide Delivery",
+                  "Professional Customer Support"
+                ].map((item, index) => (
+                  <motion.li 
+                    key={index}
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.7 + index * 0.1 }}
+                  >
+                    <span className="text-orange-500 font-bold">✔</span> {item}
+                  </motion.li>
+                ))}
               </ul>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex items-center justify-center px-6 py-12">
-          <Suspense fallback={<div className="text-gray-400">Loading tracking metadata...</div>}>
+        {/* RIGHT SIDE - Login Form */}
+        <div className="flex items-center justify-center px-6 py-12 bg-white">
+          <Suspense fallback={<div className="text-gray-500">Loading tracking metadata...</div>}>
             <LoginFormContent />
           </Suspense>
         </div>
