@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "build": "next build --webpack",
+    "start": "next start"
   },
   "dependencies": {
     "@types/nodemailer": "^8.0.1",
@@ -16,7 +15,9 @@
     "framer-motion": "^12.43.0",
     "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.3",
+    "k2-connect-node": "^2.0.0",
     "lucide-react": "^1.23.0",
+    "mongodb": "^7.7.0",
     "mongoose": "^9.7.3",
     "next": "16.2.10",
     "next-auth": "^4.24.14",
