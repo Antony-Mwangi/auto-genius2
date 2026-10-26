@@ -32,6 +32,8 @@ For local development, run `npm run dev`, expose port 3000 with `ngrok http 3000
 
 The STK initiation response indicates only that Kopo Kopo accepted the request. The signed asynchronous callback is the authority for payment success/failure. The order status endpoint is polled by the awaiting-payment page; it never marks a payment as successful itself. The server also calculates prices and shipping from trusted product data rather than browser-supplied totals.
 
+After a successful callback is verified, the order is marked `paid` and assigned a unique AutoGenius store receipt number. The customer dashboard displays the green Paid badge, store receipt number, and Kopo Kopo/M-Pesa transaction reference.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

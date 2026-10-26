@@ -1580,6 +1580,7 @@ interface OrderNotification {
   status: OrderStatus;
   paymentStatus: "unpaid" | "pending" | "paid" | "failed";
   mpesaReceipt: string | null;
+  generatedReceipt: string | null;
 }
 
 export default function AdminDashboardPage() {
@@ -1681,7 +1682,8 @@ export default function AdminDashboardPage() {
           time: new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " (" + new Date(o.createdAt).toLocaleDateString() + ")",
           status: o.status || "Pending",
           paymentStatus: o.paymentStatus || "unpaid",
-          mpesaReceipt: o.mpesaReceipt || null
+          mpesaReceipt: o.mpesaReceipt || null,
+          generatedReceipt: o.generatedReceipt || null
         }));
         setOrders(formatted);
       }
@@ -3133,6 +3135,11 @@ export default function AdminDashboardPage() {
                                 {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus === "failed" ? "Payment failed" : "Awaiting payment"}
                               </span>
                             )}
+                            {order.paymentStatus === "paid" && order.generatedReceipt && (
+                              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-400">
+                                Receipt {order.generatedReceipt}
+                              </span>
+                            )}
                           </div>
                           
                           <p className="text-xs sm:text-sm text-gray-300 font-medium">Bought: <span className="text-white font-bold">{order.items}</span></p>
@@ -3141,6 +3148,7 @@ export default function AdminDashboardPage() {
                             <p>Phone: <span className="text-gray-200 font-mono font-bold">{order.phone}</span></p>
                             <p>Total: <span className="text-orange-400 font-black">Ksh {order.total.toLocaleString()}</span></p>
                             {order.mpesaReceipt && <p>M-Pesa receipt: <span className="text-green-300 font-mono font-bold">{order.mpesaReceipt}</span></p>}
+                            {order.generatedReceipt && <p>Store receipt: <span className="text-green-300 font-mono font-bold">{order.generatedReceipt}</span></p>}
                           </div>
                         </div>
                         

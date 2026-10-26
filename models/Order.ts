@@ -30,6 +30,8 @@ export interface IOrder extends Document {
   paymentAccessTokenHash: string | null;
   /** M-Pesa receipt number from the callback metadata */
   mpesaReceipt: string | null;
+  /** Application-generated receipt number issued after payment confirmation */
+  generatedReceipt: string | null;
   /** Payer's phone number as reported by Safaricom */
   senderPhone: string | null;
   /** When the payment was confirmed */
@@ -117,6 +119,10 @@ const OrderSchema = new Schema<IOrder>(
       select: false,
     },
     mpesaReceipt: {
+      type: String,
+      default: null,
+    },
+    generatedReceipt: {
       type: String,
       default: null,
     },

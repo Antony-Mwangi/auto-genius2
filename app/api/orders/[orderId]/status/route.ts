@@ -21,7 +21,7 @@ export async function GET(
 
     await connectDB();
     const order = await Order.findById(orderId)
-      .select("paymentStatus mpesaReceipt +paymentAccessTokenHash")
+      .select("paymentStatus mpesaReceipt generatedReceipt +paymentAccessTokenHash")
       .lean();
 
     if (!order || !paymentAccessTokenMatches(accessToken, order.paymentAccessTokenHash)) {
@@ -30,7 +30,12 @@ export async function GET(
 
     const status = order.paymentStatus === "unpaid" ? "pending" : order.paymentStatus;
     return NextResponse.json(
-      { orderId, status, mpesaReceipt: order.mpesaReceipt },
+      {
+        orderId,
+        status,
+        mpesaReceipt: order.mpesaReceipt,
+        generatedReceipt: order.generatedReceipt,
+      },
       { headers: { "Cache-Control": "no-store, must-revalidate" } }
     );
   } catch (error) {

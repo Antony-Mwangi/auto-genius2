@@ -810,6 +810,7 @@ interface Order {
   status: OrderStatus;
   paymentStatus: "unpaid" | "pending" | "paid" | "failed";
   mpesaReceipt: string | null;
+  generatedReceipt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -1304,6 +1305,11 @@ export default function CustomerDashboardPage() {
                               {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus === "failed" ? "Payment failed" : "Awaiting payment"}
                             </span>
                           )}
+                          {order.paymentStatus === "paid" && order.generatedReceipt && (
+                            <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                              Receipt {order.generatedReceipt}
+                            </span>
+                          )}
                           {user.role === "admin" && order.user && (
                             <span className="text-[8px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                               User: {order.user.toString().slice(-6)}
@@ -1439,6 +1445,12 @@ export default function CustomerDashboardPage() {
                                   <p className="flex justify-between">
                                     <span className="text-gray-500">M-Pesa receipt:</span>
                                     <span className="font-mono text-gray-900">{order.mpesaReceipt}</span>
+                                  </p>
+                                )}
+                                {order.generatedReceipt && (
+                                  <p className="flex justify-between">
+                                    <span className="text-gray-500">Store receipt:</span>
+                                    <span className="font-mono font-bold text-green-700">{order.generatedReceipt}</span>
                                   </p>
                                 )}
                               </>

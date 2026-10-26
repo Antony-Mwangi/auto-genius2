@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Order from "@/models/Order";
 import { normalizePhone } from "@/lib/daraja";
+import { generatePaymentReceipt } from "@/lib/payment-receipt";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
       _id: orderId,
       paymentMethod: "M-Pesa",
       kopokopoPaymentId: paymentRequestId,
-    }).select("paymentStatus amount total phone");
+    }).select("paymentStatus amount total phone generatedReceipt");
 
     if (!order) {
       console.warn("Kopo Kopo callback did not match an order.");
@@ -135,19 +136,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await Order.findOneAndUpdate(
+    const paymentDate = new Date();
+    const updatedOrder = await Order.findOneAndUpdate(
       { _id: orderId, paymentStatus: "pending", kopokopoPaymentId: paymentRequestId },
       {
         $set: {
           paymentStatus: result === "success" ? "paid" : "failed",
           mpesaReceipt: result === "success" ? receipt : null,
+          generatedReceipt: result === "success"
+            ? order.generatedReceipt || generatePaymentReceipt(orderId, paymentDate)
+            : null,
           senderPhone: result === "success" ? senderPhone || null : null,
-          paymentDate: result === "success" ? new Date() : null,
+          paymentDate: result === "success" ? paymentDate : null,
           ...(result === "success" && { status: "Processed" }),
         },
       },
       { new: true }
     );
+
+    if (result === "success" && updatedOrder?.generatedReceipt) {
+      console.info(`Payment confirmed for order ${orderId}; receipt issued.`);
+    }
 
     return callbackAccepted();
   } catch (error) {

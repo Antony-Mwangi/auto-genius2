@@ -10,6 +10,7 @@ export default function PendingPaymentPage() {
   const router = useRouter();
   const [state, setState] = useState<PaymentState>("checking");
   const [receipt, setReceipt] = useState<string | null>(null);
+  const [storeReceipt, setStoreReceipt] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   const checkStatus = useCallback(async (token: string) => {
@@ -19,7 +20,11 @@ export default function PendingPaymentPage() {
       cache: "no-store",
     });
     if (!response.ok) throw new Error("Unable to check this order.");
-    return response.json() as Promise<{ status: string; mpesaReceipt?: string | null }>;
+    return response.json() as Promise<{
+      status: string;
+      mpesaReceipt?: string | null;
+      generatedReceipt?: string | null;
+    }>;
   }, [orderId]);
 
   useEffect(() => {
@@ -38,6 +43,7 @@ export default function PendingPaymentPage() {
         if (!active) return;
         if (data.status === "paid") {
           setReceipt(data.mpesaReceipt || null);
+          setStoreReceipt(data.generatedReceipt || null);
           setState("paid");
           sessionStorage.removeItem(`mpesa-order-token:${orderId}`);
           localStorage.removeItem("autogenius_cart");
@@ -82,6 +88,7 @@ export default function PendingPaymentPage() {
       const data = await checkStatus(token);
       if (data.status === "paid") {
         setReceipt(data.mpesaReceipt || null);
+        setStoreReceipt(data.generatedReceipt || null);
         setState("paid");
         sessionStorage.removeItem(`mpesa-order-token:${orderId}`);
         localStorage.removeItem("autogenius_cart");
@@ -98,8 +105,8 @@ export default function PendingPaymentPage() {
 
   const copy = {
     checking: { title: "Checking payment…", detail: "Please wait while we check your order." },
-    pending: { title: "Awaiting payment confirmation", detail: "Approve the M-Pesa prompt on your phone. This page will update when Safaricom confirms the payment." },
-    paid: { title: "Payment successful", detail: "Safaricom confirmed your payment." },
+    pending: { title: "Awaiting payment confirmation", detail: "Approve the M-Pesa prompt on your phone. This page will update when Kopo Kopo confirms the payment." },
+    paid: { title: "Payment successful", detail: "Kopo Kopo confirmed your payment." },
     failed: { title: "Payment failed or cancelled", detail: "No successful payment was confirmed for this order." },
     timeout: { title: "Payment timeout", detail: "No callback arrived within 60 seconds. Please check your order status later; do not assume the payment failed." },
     unavailable: { title: "Order status unavailable", detail: "This browser session does not have the secure token needed to view this order." },
@@ -116,7 +123,12 @@ export default function PendingPaymentPage() {
         <p className="mt-4 text-xs text-gray-400">Order #{orderId.slice(-6).toUpperCase()}</p>
         {state === "paid" && receipt && (
           <p className="mt-4 rounded-xl bg-green-50 px-4 py-3 font-mono text-sm font-bold text-green-800">
-            M-Pesa receipt: {receipt}
+            M-Pesa transaction reference: {receipt}
+          </p>
+        )}
+        {state === "paid" && storeReceipt && (
+          <p className="mt-3 rounded-xl bg-green-50 px-4 py-3 font-mono text-sm font-bold text-green-800">
+            Store receipt: {storeReceipt}
           </p>
         )}
         {state === "pending" && (
