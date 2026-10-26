@@ -2,128 +2,168 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Order from "@/models/Order";
+import { normalizePhone } from "@/lib/daraja";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+interface CallbackMetadataItem {
+  Name: string;
+  Value?: string | number;
+}
+
+interface StkCallback {
+  CheckoutRequestID: string;
+  ResultCode: number;
+  ResultDesc?: string;
+  CallbackMetadata?: { Item?: CallbackMetadataItem[] };
+}
+
+function accepted() {
+  return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" });
+}
+
+/**
+ * Accepts the asynchronous Safaricom STK callback. ResultCode 0 confirms a
+ * successful payment; 1032 means the customer cancelled the prompt; any other
+ * non-zero ResultCode marks the payment failed. The STK Push response itself
+ * is only an acceptance acknowledgement and is never used to mark an order paid.
+ */
 export async function POST(request: NextRequest) {
   const requestId = Math.random().toString(36).substring(7);
-  console.log(
-    `[${requestId}] POST /api/mpesa/callback - Kopo Kopo webhook received`
-  );
+  console.log(`[${requestId}] Daraja callback received`);
 
   try {
     const body = await request.json();
+    // Daraja callback structure:
+    // {
+    //   Body: {
+    //     stkCallback: {
+    //       MerchantRequestID: "...",
+    //       CheckoutRequestID: "...",
+    //       ResultCode: 0,
+    //       ResultDesc: "...",
+    //       CallbackMetadata: {
+    //         Item: [
+    //           { Name: "Amount", Value: 1 },
+    //           { Name: "MpesaReceiptNumber", Value: "..." },
+    //           { Name: "TransactionDate", Value: 20261016123456 },
+    //           { Name: "PhoneNumber", Value: 254712345678 }
+    //         ]
+    //       }
+    //     }
+    //   }
+    // }
 
-    // Log the full payload for debugging (Kopo Kopo sends small payloads)
-    console.log(
-      `[${requestId}] Callback payload:`,
-      JSON.stringify(body, null, 2)
-    );
-
-    // ---- Extract the resource from the Kopo Kopo webhook structure ----
-    // Two known shapes exist depending on the event type:
-    //   body.data.attributes.event.resource   (payment result events)
-    //   body.data.attributes.resource         (legacy/alternative)
-    const resource =
-      body?.data?.attributes?.event?.resource ||
-      body?.data?.attributes?.resource;
-
-    if (!resource) {
-      console.error(`[${requestId}] Callback missing resource payload`);
-      // Always return 200 — Kopo Kopo retries on non-2xx
-      return NextResponse.json({ success: true, ignored: "no_resource" });
+    const stkCallback = body?.Body?.stkCallback as StkCallback | undefined;
+    if (!stkCallback) {
+      console.error(`[${requestId}] Callback missing stkCallback`);
+      return accepted();
     }
 
     const {
-      reference: orderId,
-      status,
-      sender_phone_number,
-      transaction_reference,
-    } = resource;
+      CheckoutRequestID,
+      ResultCode,
+      ResultDesc,
+      CallbackMetadata,
+    } = stkCallback;
 
-    if (!orderId) {
-      console.error(`[${requestId}] Callback missing order reference`);
-      return NextResponse.json({ success: true, ignored: "no_reference" });
+    if (!CheckoutRequestID) {
+      console.error(`[${requestId}] Missing CheckoutRequestID`);
+      return accepted();
     }
 
-    console.log(`[${requestId}] Order ${orderId} status="${status}"`);
+    const isSuccessful = Number(ResultCode) === 0;
 
-    // ---- Classify terminal vs non-terminal states ----
-    // "Success" with a receipt  → paid
-    // "Failed"                  → failed
-    // Anything else             → ignore (still processing)
-    const isSuccessful = status === "Success" && !!transaction_reference;
-    const isFailed = status === "Failed";
+    // ResultCode 0 means the customer completed payment successfully. ResultCode 1032
+    // means the customer cancelled the STK prompt; all other non-zero values are failures.
+    let mpesaReceipt: string | null = null;
+    let senderPhone: string | null = null;
+    let paidAmount: number | null = null;
 
-    if (!isSuccessful && !isFailed) {
-      console.log(
-        `[${requestId}] Non-terminal status "${status}" — no DB update`
-      );
-      return NextResponse.json({ success: true, ignored: "non_terminal" });
+    if (isSuccessful && CallbackMetadata?.Item) {
+      for (const item of CallbackMetadata.Item) {
+        if (item.Name === "MpesaReceiptNumber") {
+          mpesaReceipt = String(item.Value);
+        }
+        if (item.Name === "PhoneNumber") {
+          senderPhone = String(item.Value);
+        }
+        if (item.Name === "Amount") {
+          paidAmount = Number(item.Value);
+        }
+      }
     }
+
+    console.log(`[${requestId}] CheckoutRequestID=${CheckoutRequestID}, ResultCode=${ResultCode}, Desc="${ResultDesc}"`);
 
     await connectDB();
 
-    // ---- Idempotency: skip if this order is already paid/failed ----
-    const existing = await Order.findById(orderId)
-      .select("paymentStatus mpesaReceipt")
+    // Idempotency guard: if the order is already in a terminal state, skip
+    const existing = await Order.findOne({
+      checkoutRequestId: CheckoutRequestID,
+    })
+      .select("paymentStatus amount total phone")
       .lean();
 
     if (!existing) {
-      console.error(`[${requestId}] Order not found: ${orderId}`);
-      // Return 200 so Kopo Kopo doesn't keep retrying
-      return NextResponse.json({ success: true, ignored: "order_not_found" });
-    }
-
-    if (
-      existing.paymentStatus === "paid" ||
-      existing.paymentStatus === "failed"
-    ) {
-      console.log(
-        `[${requestId}] Order ${orderId} already in terminal state ` +
-          `("${existing.paymentStatus}") — skipping update`
+      console.error(
+        `[${requestId}] Order not found for CheckoutRequestID: ${CheckoutRequestID}`
       );
-      return NextResponse.json({ success: true, ignored: "already_processed" });
+      // Return 200 so Daraja stops retrying
+      return accepted();
     }
 
-    // ---- Update the order with the payment result ----
-    const update: Record<string, unknown> = {
-      paymentStatus: isSuccessful ? "paid" : "failed",
-      mpesaReceipt: transaction_reference || null,
-      senderPhone: sender_phone_number || null,
-      paymentDate: isSuccessful ? new Date() : null,
-      kopoKopoReference: body?.data?.id || null,
-    };
-
-    // Only advance the fulfillment status on successful payment
-    if (isSuccessful) {
-      update.status = "Processed";
+    if (existing.paymentStatus === "paid") {
+      console.log(`[${requestId}] Order already paid; duplicate callback ignored`);
+      return accepted();
     }
 
-    const updated = await Order.findByIdAndUpdate(
-      orderId,
-      { $set: update },
+    const expectedAmount = existing.amount ?? existing.total;
+    if (isSuccessful && (paidAmount !== expectedAmount || senderPhone !== normalizePhone(existing.phone))) {
+      console.error(
+        `[${requestId}] Callback amount or phone mismatch for ${CheckoutRequestID}`
+      );
+      return accepted();
+    }
+
+    if (isSuccessful && !mpesaReceipt) {
+      console.error(`[${requestId}] Successful callback missing M-Pesa receipt`);
+      return accepted();
+    }
+
+    // The callback is the source of truth. A pending-state filter prevents duplicate or
+    // out-of-order callbacks from replacing a terminal payment result.
+    const updated = await Order.findOneAndUpdate(
+      { checkoutRequestId: CheckoutRequestID, paymentStatus: "pending" },
+      {
+        $set: {
+          paymentStatus: isSuccessful ? "paid" : "failed",
+          mpesaReceipt,
+          senderPhone,
+          paymentDate: isSuccessful ? new Date() : null,
+          ...(isSuccessful && { status: "Processed" }),
+        },
+      },
       { new: true }
     );
 
     if (!updated) {
       console.error(
-        `[${requestId}] Order ${orderId} update returned null unexpectedly`
+        `[${requestId}] Order update returned null for ${CheckoutRequestID}`
       );
-      return NextResponse.json({ success: true, ignored: "update_failed" });
+      return accepted();
     }
 
     console.log(
-      `[${requestId}] Order ${orderId} updated — ` +
+      `[${requestId}] Order ${updated._id} updated — ` +
         `paymentStatus=${updated.paymentStatus}, ` +
         `mpesaReceipt=${updated.mpesaReceipt}`
     );
 
-    return NextResponse.json({ success: true });
+    return accepted();
   } catch (error) {
     console.error(`[${requestId}] Callback processing error:`, error);
-    // Always return 200 so Kopo Kopo acknowledges receipt and stops retrying
-    return NextResponse.json({ success: true, error: "processing_error" });
+    return accepted();
   }
 }

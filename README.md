@@ -20,6 +20,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## M-Pesa payments (Daraja STK Push)
+
+The checkout uses Safaricom Daraja STK Push. Copy `.env.example` to `.env.local` and add the Daraja credentials from your Safaricom Developer Portal app:
+
+- `MPESA_ENV`: `sandbox` while testing; use `production` only after production access is approved.
+- `MPESA_CONSUMER_KEY` and `MPESA_CONSUMER_SECRET`: server-side OAuth credentials.
+- `MPESA_SHORTCODE` and `MPESA_PASSKEY`: the shortcode and Lipa Na M-Pesa Online passkey for that Daraja app.
+- `MPESA_BASE_URL`: use `https://sandbox.safaricom.co.ke` in sandbox; production defaults to Safaricom's production Daraja host.
+- `MPESA_CALLBACK_URL`: the full public HTTPS URL ending in `/api/mpesa/callback`. Daraja must be able to reach it; localhost is not reachable from Safaricom.
+
+For local callback testing, start the app with `npm run dev`, run `ngrok http 3000`, then set `MPESA_CALLBACK_URL` to `https://<your-ngrok-host>/api/mpesa/callback`. The Safaricom sandbox test phone is `254708374149`. Approve the PIN prompt to test success; choose Cancel to test failure (`ResultCode` 1032). Callbacks commonly arrive within 5–30 seconds. The STK Push response only confirms that Daraja accepted the request; the callback is what updates the order to paid or failed.
+
+Restart the Next.js server after changing `.env.local`. Keep all Daraja secrets out of browser-prefixed variables, source control, and client logs. For production, switch credentials/shortcode and environment together, configure the production callback URL, and make sure the deployed app uses HTTPS.
+
+The server derives item prices and shipping fees from the database/configuration; it does not trust a price or total sent by the browser. Payment completion is recorded from the callback and displayed by polling the protected order-status endpoint.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

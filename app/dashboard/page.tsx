@@ -808,6 +808,8 @@ interface Order {
   itemsSummary: string;
   total: number;
   status: OrderStatus;
+  paymentStatus: "unpaid" | "pending" | "paid" | "failed";
+  mpesaReceipt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -1291,6 +1293,17 @@ export default function CustomerDashboardPage() {
                           >
                             {statusConfig.label}
                           </span>
+                          {order.paymentMethod === "M-Pesa" && (
+                            <span className={`text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                              order.paymentStatus === "paid"
+                                ? "bg-green-50 text-green-700 border border-green-200"
+                                : order.paymentStatus === "failed"
+                                  ? "bg-red-50 text-red-700 border border-red-200"
+                                  : "bg-amber-50 text-amber-700 border border-amber-200"
+                            }`}>
+                              {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus === "failed" ? "Payment failed" : "Awaiting payment"}
+                            </span>
+                          )}
                           {user.role === "admin" && order.user && (
                             <span className="text-[8px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                               User: {order.user.toString().slice(-6)}
@@ -1414,6 +1427,22 @@ export default function CustomerDashboardPage() {
                                 {order.paymentMethod}
                               </span>
                             </p>
+                            {order.paymentMethod === "M-Pesa" && (
+                              <>
+                                <p className="flex justify-between">
+                                  <span className="text-gray-500">Payment status:</span>
+                                  <span className={order.paymentStatus === "paid" ? "text-green-600 font-bold" : order.paymentStatus === "failed" ? "text-red-600 font-bold" : "text-amber-600 font-bold"}>
+                                    {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus === "failed" ? "Payment failed" : "Awaiting payment"}
+                                  </span>
+                                </p>
+                                {order.mpesaReceipt && (
+                                  <p className="flex justify-between">
+                                    <span className="text-gray-500">M-Pesa receipt:</span>
+                                    <span className="font-mono text-gray-900">{order.mpesaReceipt}</span>
+                                  </p>
+                                )}
+                              </>
+                            )}
                             <p className="flex justify-between">
                               <span className="text-gray-500">Total:</span>
                               <span className="text-orange-600 font-black">

@@ -1,72 +1,3 @@
-// import mongoose, { Schema, model, models } from "mongoose";
-
-// const OrderSchema = new Schema(
-//   {
-//     user: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "User",
-//       default: null,
-//     },
-//     customerName: {
-//       type: String,
-//       required: true,
-//     },
-//     customerEmail: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//       lowercase: true,
-//     },
-//     phone: {
-//       type: String,
-//       required: true,
-//     },
-//     paymentMethod: {
-//       type: String,
-//       required: true,
-//     },
-//     itemsSummary: {
-//       type: String,
-//       required: true,
-//     },
-//     total: {
-//       type: Number,
-//       required: true,
-//     },
-//     status: {
-//       type: String,
-//       default: "Pending",
-//     },
-
-//     // Payment tracking
-//     paymentStatus: {
-//       type: String,
-//       enum: ["unpaid", "pending", "paid", "failed"],
-//       default: "unpaid",
-//     },
-//     mpesaReceipt: {
-//       type: String,
-//       default: null,
-//     },
-//     senderPhone: {
-//       type: String,
-//       default: null,
-//     },
-//     paymentDate: {
-//       type: Date,
-//       default: null,
-//     },
-//     kopoKopoReference: {
-//       type: String,
-//       default: null,
-//     },
-//   },
-//   { timestamps: true }
-// );
-
-// export default models.Order || model("Order", OrderSchema);
-
-
 // models/Order.ts
 
 import mongoose, { Schema, model, models, Document, Model } from "mongoose";
@@ -81,17 +12,24 @@ export interface IOrder extends Document {
   customerName: string;
   customerEmail: string;
   phone: string;
-  paymentMethod: string;
+  paymentMethod: "M-Pesa" | "Cash on Delivery";
   itemsSummary: string;
+  amount: number;
   total: number;
   status: "Pending" | "Processed" | "Dispatched" | "Delivered";
 
-  // Payment tracking
+  // ===== Payment tracking =====
   paymentStatus: "unpaid" | "pending" | "paid" | "failed";
+  /** Daraja CheckoutRequestID returned by the STK push request */
+  checkoutRequestId: string | null;
+  /** Hash of the checkout capability token returned once to the buyer */
+  paymentAccessTokenHash: string | null;
+  /** M-Pesa receipt number from the callback metadata */
   mpesaReceipt: string | null;
+  /** Payer's phone number as reported by Safaricom */
   senderPhone: string | null;
+  /** When the payment was confirmed */
   paymentDate: Date | null;
-  kopoKopoReference: string | null;
 
   createdAt: Date;
   updatedAt: Date;
@@ -131,6 +69,11 @@ const OrderSchema = new Schema<IOrder>(
       type: String,
       required: true,
     },
+    amount: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
     total: {
       type: Number,
       required: true,
@@ -150,6 +93,16 @@ const OrderSchema = new Schema<IOrder>(
       default: "unpaid",
       index: true,
     },
+    checkoutRequestId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    paymentAccessTokenHash: {
+      type: String,
+      default: null,
+      select: false,
+    },
     mpesaReceipt: {
       type: String,
       default: null,
@@ -162,15 +115,9 @@ const OrderSchema = new Schema<IOrder>(
       type: Date,
       default: null,
     },
-    kopoKopoReference: {
-      type: String,
-      default: null,
-      index: true,
-    },
   },
   {
     timestamps: true,
-    // Prevent schema recompilation issues during Next.js hot reload
     collection: "orders",
   }
 );

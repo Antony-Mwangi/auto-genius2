@@ -1578,6 +1578,8 @@ interface OrderNotification {
   total: number;
   time: string;
   status: OrderStatus;
+  paymentStatus: "unpaid" | "pending" | "paid" | "failed";
+  mpesaReceipt: string | null;
 }
 
 export default function AdminDashboardPage() {
@@ -1677,7 +1679,9 @@ export default function AdminDashboardPage() {
           items: o.itemsSummary,
           total: o.total,
           time: new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + " (" + new Date(o.createdAt).toLocaleDateString() + ")",
-          status: o.status || "Pending"
+          status: o.status || "Pending",
+          paymentStatus: o.paymentStatus || "unpaid",
+          mpesaReceipt: o.mpesaReceipt || null
         }));
         setOrders(formatted);
       }
@@ -3118,6 +3122,17 @@ export default function AdminDashboardPage() {
                             }`}>
                               {order.paymentMethod === "M-Pesa" ? "M-Pesa" : "COD"}
                             </span>
+                            {order.paymentMethod === "M-Pesa" && (
+                              <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider ${
+                                order.paymentStatus === "paid"
+                                  ? "bg-green-500/10 border border-green-500/20 text-green-400"
+                                  : order.paymentStatus === "failed"
+                                    ? "bg-red-500/10 border border-red-500/20 text-red-400"
+                                    : "bg-amber-500/10 border border-amber-500/20 text-amber-400"
+                              }`}>
+                                {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus === "failed" ? "Payment failed" : "Awaiting payment"}
+                              </span>
+                            )}
                           </div>
                           
                           <p className="text-xs sm:text-sm text-gray-300 font-medium">Bought: <span className="text-white font-bold">{order.items}</span></p>
@@ -3125,6 +3140,7 @@ export default function AdminDashboardPage() {
                           <div className="flex flex-col sm:flex-row sm:gap-6 gap-1 text-xs text-gray-400 pt-1 border-t border-white/5 sm:border-0 sm:pt-0">
                             <p>Phone: <span className="text-gray-200 font-mono font-bold">{order.phone}</span></p>
                             <p>Total: <span className="text-orange-400 font-black">Ksh {order.total.toLocaleString()}</span></p>
+                            {order.mpesaReceipt && <p>M-Pesa receipt: <span className="text-green-300 font-mono font-bold">{order.mpesaReceipt}</span></p>}
                           </div>
                         </div>
                         
