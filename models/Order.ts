@@ -22,6 +22,10 @@ export interface IOrder extends Document {
   paymentStatus: "unpaid" | "pending" | "paid" | "failed";
   /** Daraja CheckoutRequestID returned by the STK push request */
   checkoutRequestId: string | null;
+  /** Kopo Kopo incoming payment request resource ID */
+  kopokopoPaymentId: string | null;
+  /** Kopo Kopo payment request resource URL used for reconciliation */
+  kopokopoPaymentLocation: string | null;
   /** Hash of the checkout capability token returned once to the buyer */
   paymentAccessTokenHash: string | null;
   /** M-Pesa receipt number from the callback metadata */
@@ -97,6 +101,15 @@ const OrderSchema = new Schema<IOrder>(
       type: String,
       default: null,
       index: true,
+    },
+    kopokopoPaymentId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    kopokopoPaymentLocation: {
+      type: String,
+      default: null,
     },
     paymentAccessTokenHash: {
       type: String,

@@ -20,21 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## M-Pesa payments (Daraja STK Push)
+## M-Pesa payments (Kopo Kopo STK Push)
 
-The checkout uses Safaricom Daraja STK Push. Copy `.env.example` to `.env.local` and add the Daraja credentials from your Safaricom Developer Portal app:
+Checkout initiates an M-Pesa STK Push through Kopo Kopo K2 Connect. Copy `.env.example` to `.env.local` and set `KOPOKOPO_CLIENT_ID`, `KOPOKOPO_CLIENT_SECRET`, `KOPOKOPO_API_KEY`, and `KOPOKOPO_TILL_NUMBER` from the corresponding Kopo Kopo environment. Never expose these as `NEXT_PUBLIC_` variables.
 
-- `MPESA_ENV`: `sandbox` while testing; use `production` only after production access is approved.
-- `MPESA_CONSUMER_KEY` and `MPESA_CONSUMER_SECRET`: server-side OAuth credentials.
-- `MPESA_SHORTCODE` and `MPESA_PASSKEY`: the shortcode and Lipa Na M-Pesa Online passkey for that Daraja app.
-- `MPESA_BASE_URL`: use `https://sandbox.safaricom.co.ke` in sandbox; production defaults to Safaricom's production Daraja host.
-- `MPESA_CALLBACK_URL`: the full public HTTPS URL ending in `/api/mpesa/callback`. Daraja must be able to reach it; localhost is not reachable from Safaricom.
+- For sandbox, use `KOPOKOPO_BASE_URL=https://sandbox.kopokopo.com` and sandbox credentials. Sandbox transactions are simulations and do not generate real-money STK PIN prompts.
+- For production, use approved production credentials and `KOPOKOPO_BASE_URL=https://api.kopokopo.com`. The merchant dashboard URL `https://app.kopokopo.com` is not the API host; the integration maps that exact value to the production API host for compatibility.
+- `KOPOKOPO_CALLBACK_URL` must be a public HTTPS URL ending in `/api/mpesa/callback`. Kopo Kopo signs callbacks with `X-KopoKopo-Signature`; the endpoint validates the HMAC-SHA256 signature against the client secret or API key used by the installed SDK before updating an order.
 
-For local callback testing, start the app with `npm run dev`, run `ngrok http 3000`, then set `MPESA_CALLBACK_URL` to `https://<your-ngrok-host>/api/mpesa/callback`. The Safaricom sandbox test phone is `254708374149`. Approve the PIN prompt to test success; choose Cancel to test failure (`ResultCode` 1032). Callbacks commonly arrive within 5–30 seconds. The STK Push response only confirms that Daraja accepted the request; the callback is what updates the order to paid or failed.
+For local development, run `npm run dev`, expose port 3000 with `ngrok http 3000`, and set `KOPOKOPO_CALLBACK_URL` to `https://<your-ngrok-host>/api/mpesa/callback`. Configure the same callback URL in your Kopo Kopo app if required. Restart Next.js after changing `.env.local`. Kopo Kopo's sandbox simulates transactions and does not send real PIN prompts; use its dashboard/test flow for sandbox verification. Use production credentials and the production API host only for approved live transactions.
 
-Restart the Next.js server after changing `.env.local`. Keep all Daraja secrets out of browser-prefixed variables, source control, and client logs. For production, switch credentials/shortcode and environment together, configure the production callback URL, and make sure the deployed app uses HTTPS.
-
-The server derives item prices and shipping fees from the database/configuration; it does not trust a price or total sent by the browser. Payment completion is recorded from the callback and displayed by polling the protected order-status endpoint.
+The STK initiation response indicates only that Kopo Kopo accepted the request. The signed asynchronous callback is the authority for payment success/failure. The order status endpoint is polled by the awaiting-payment page; it never marks a payment as successful itself. The server also calculates prices and shipping from trusted product data rather than browser-supplied totals.
 
 ## Learn More
 

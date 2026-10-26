@@ -1,4 +1,4 @@
-// app/api/mpesa/callback/route.ts
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Order from "@/models/Order";
@@ -7,163 +7,152 @@ import { normalizePhone } from "@/lib/daraja";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-interface CallbackMetadataItem {
-  Name: string;
-  Value?: string | number;
+interface KopoKopoResource {
+  id?: string;
+  amount?: string | number;
+  currency?: string;
+  reference?: string;
+  sender_phone_number?: string;
+  status?: string;
 }
 
-interface StkCallback {
-  CheckoutRequestID: string;
-  ResultCode: number;
-  ResultDesc?: string;
-  CallbackMetadata?: { Item?: CallbackMetadataItem[] };
+interface IncomingPaymentCallback {
+  data?: {
+    id?: string;
+    type?: string;
+    attributes?: {
+      status?: string;
+      metadata?: Record<string, string | number | undefined>;
+      event?: {
+        resource?: KopoKopoResource | null;
+        errors?: string[] | null;
+      };
+    };
+  };
 }
 
-function accepted() {
-  return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" });
+function isAuthenticKopoKopoCallback(
+  rawBody: string,
+  parsedBody: IncomingPaymentCallback,
+  signature: string | null
+): boolean {
+  const clientSecret = process.env.KOPOKOPO_CLIENT_SECRET;
+  const apiKey = process.env.KOPOKOPO_API_KEY;
+  if (!signature) return false;
+
+  const supplied = signature.replace(/^sha256=/i, "").trim().toLowerCase();
+  const suppliedBytes = Buffer.from(supplied, "hex");
+  if (suppliedBytes.length !== 32) return false;
+
+  // Kopo Kopo's webhook guide describes signing with client_secret; the
+  // installed K2 Node SDK signs with api_key. Accept either documented SDK key.
+  const payloads = [rawBody, JSON.stringify(parsedBody)];
+  return [clientSecret, apiKey].some((key) => {
+    if (!key) return false;
+    return payloads.some((payload) => {
+      const expectedBytes = createHmac("sha256", key).update(payload, "utf8").digest();
+      return timingSafeEqual(suppliedBytes, expectedBytes);
+    });
+  });
+}
+
+function callbackAccepted() {
+  return NextResponse.json({ received: true }, { status: 200 });
 }
 
 /**
- * Accepts the asynchronous Safaricom STK callback. ResultCode 0 confirms a
- * successful payment; 1032 means the customer cancelled the prompt; any other
- * non-zero ResultCode marks the payment failed. The STK Push response itself
- * is only an acceptance acknowledgement and is never used to mark an order paid.
+ * Kopo Kopo posts the asynchronous incoming-payment result here. Its immediate
+ * STK API response only means the request was accepted. `attributes.status`
+ * becomes `Success` or `Failed` after processing; only `Success`, with a valid
+ * amount and receipt, confirms an order as paid.
  */
 export async function POST(request: NextRequest) {
-  const requestId = Math.random().toString(36).substring(7);
-  console.log(`[${requestId}] Daraja callback received`);
+  const rawBody = await request.text();
+  let callback: IncomingPaymentCallback;
+  try {
+    callback = JSON.parse(rawBody) as IncomingPaymentCallback;
+  } catch {
+    return NextResponse.json({ error: "Invalid callback JSON." }, { status: 400 });
+  }
+  if (!isAuthenticKopoKopoCallback(rawBody, callback, request.headers.get("x-kopokopo-signature"))) {
+    console.warn("Rejected Kopo Kopo callback with invalid signature.");
+    return NextResponse.json({ error: "Invalid signature." }, { status: 401 });
+  }
+
+  const data = callback.data;
+  const attributes = data?.attributes;
+  const paymentRequestId = data?.id;
+  const orderId = attributes?.metadata?.orderId;
+  const result = attributes?.status?.toLowerCase();
+
+  if (data?.type !== "incoming_payment" || !paymentRequestId || typeof orderId !== "string") {
+    console.warn("Ignored Kopo Kopo callback missing payment/order reference.");
+    return callbackAccepted();
+  }
+
+  if (result !== "success" && result !== "failed") {
+    // An intermediate status is acknowledged but must not change payment state.
+    return callbackAccepted();
+  }
 
   try {
-    const body = await request.json();
-    // Daraja callback structure:
-    // {
-    //   Body: {
-    //     stkCallback: {
-    //       MerchantRequestID: "...",
-    //       CheckoutRequestID: "...",
-    //       ResultCode: 0,
-    //       ResultDesc: "...",
-    //       CallbackMetadata: {
-    //         Item: [
-    //           { Name: "Amount", Value: 1 },
-    //           { Name: "MpesaReceiptNumber", Value: "..." },
-    //           { Name: "TransactionDate", Value: 20261016123456 },
-    //           { Name: "PhoneNumber", Value: 254712345678 }
-    //         ]
-    //       }
-    //     }
-    //   }
-    // }
+    await connectDB();
+    const order = await Order.findOne({
+      _id: orderId,
+      paymentMethod: "M-Pesa",
+      kopokopoPaymentId: paymentRequestId,
+    }).select("paymentStatus amount total phone");
 
-    const stkCallback = body?.Body?.stkCallback as StkCallback | undefined;
-    if (!stkCallback) {
-      console.error(`[${requestId}] Callback missing stkCallback`);
-      return accepted();
+    if (!order) {
+      console.warn("Kopo Kopo callback did not match an order.");
+      return callbackAccepted();
     }
 
-    const {
-      CheckoutRequestID,
-      ResultCode,
-      ResultDesc,
-      CallbackMetadata,
-    } = stkCallback;
-
-    if (!CheckoutRequestID) {
-      console.error(`[${requestId}] Missing CheckoutRequestID`);
-      return accepted();
+    if (order.paymentStatus === "paid" || order.paymentStatus !== "pending") {
+      return callbackAccepted();
     }
 
-    const isSuccessful = Number(ResultCode) === 0;
+    const resource = attributes?.event?.resource;
+    const paidAmount = Number(resource?.amount);
+    const receipt = resource?.reference;
+    const senderPhone = resource?.sender_phone_number;
 
-    // ResultCode 0 means the customer completed payment successfully. ResultCode 1032
-    // means the customer cancelled the STK prompt; all other non-zero values are failures.
-    let mpesaReceipt: string | null = null;
-    let senderPhone: string | null = null;
-    let paidAmount: number | null = null;
-
-    if (isSuccessful && CallbackMetadata?.Item) {
-      for (const item of CallbackMetadata.Item) {
-        if (item.Name === "MpesaReceiptNumber") {
-          mpesaReceipt = String(item.Value);
-        }
-        if (item.Name === "PhoneNumber") {
-          senderPhone = String(item.Value);
-        }
-        if (item.Name === "Amount") {
-          paidAmount = Number(item.Value);
-        }
+    if (result === "success") {
+      const expectedAmount = Number(order.amount ?? order.total);
+      if (
+        !Number.isFinite(paidAmount) ||
+        paidAmount !== expectedAmount ||
+        !receipt ||
+        (resource?.currency && resource.currency !== "KES") ||
+        (resource?.status && resource.status.toLowerCase() !== "received")
+      ) {
+        console.error(`Kopo Kopo payment callback failed order verification for ${orderId}.`);
+        return callbackAccepted();
+      }
+      if (senderPhone && normalizePhone(senderPhone) !== normalizePhone(order.phone)) {
+        console.error(`Kopo Kopo payment callback phone did not match order ${orderId}.`);
+        return callbackAccepted();
       }
     }
 
-    console.log(`[${requestId}] CheckoutRequestID=${CheckoutRequestID}, ResultCode=${ResultCode}, Desc="${ResultDesc}"`);
-
-    await connectDB();
-
-    // Idempotency guard: if the order is already in a terminal state, skip
-    const existing = await Order.findOne({
-      checkoutRequestId: CheckoutRequestID,
-    })
-      .select("paymentStatus amount total phone")
-      .lean();
-
-    if (!existing) {
-      console.error(
-        `[${requestId}] Order not found for CheckoutRequestID: ${CheckoutRequestID}`
-      );
-      // Return 200 so Daraja stops retrying
-      return accepted();
-    }
-
-    if (existing.paymentStatus === "paid") {
-      console.log(`[${requestId}] Order already paid; duplicate callback ignored`);
-      return accepted();
-    }
-
-    const expectedAmount = existing.amount ?? existing.total;
-    if (isSuccessful && (paidAmount !== expectedAmount || senderPhone !== normalizePhone(existing.phone))) {
-      console.error(
-        `[${requestId}] Callback amount or phone mismatch for ${CheckoutRequestID}`
-      );
-      return accepted();
-    }
-
-    if (isSuccessful && !mpesaReceipt) {
-      console.error(`[${requestId}] Successful callback missing M-Pesa receipt`);
-      return accepted();
-    }
-
-    // The callback is the source of truth. A pending-state filter prevents duplicate or
-    // out-of-order callbacks from replacing a terminal payment result.
-    const updated = await Order.findOneAndUpdate(
-      { checkoutRequestId: CheckoutRequestID, paymentStatus: "pending" },
+    await Order.findOneAndUpdate(
+      { _id: orderId, paymentStatus: "pending", kopokopoPaymentId: paymentRequestId },
       {
         $set: {
-          paymentStatus: isSuccessful ? "paid" : "failed",
-          mpesaReceipt,
-          senderPhone,
-          paymentDate: isSuccessful ? new Date() : null,
-          ...(isSuccessful && { status: "Processed" }),
+          paymentStatus: result === "success" ? "paid" : "failed",
+          mpesaReceipt: result === "success" ? receipt : null,
+          senderPhone: result === "success" ? senderPhone || null : null,
+          paymentDate: result === "success" ? new Date() : null,
+          ...(result === "success" && { status: "Processed" }),
         },
       },
       { new: true }
     );
 
-    if (!updated) {
-      console.error(
-        `[${requestId}] Order update returned null for ${CheckoutRequestID}`
-      );
-      return accepted();
-    }
-
-    console.log(
-      `[${requestId}] Order ${updated._id} updated — ` +
-        `paymentStatus=${updated.paymentStatus}, ` +
-        `mpesaReceipt=${updated.mpesaReceipt}`
-    );
-
-    return accepted();
+    return callbackAccepted();
   } catch (error) {
-    console.error(`[${requestId}] Callback processing error:`, error);
-    return accepted();
+    console.error("Kopo Kopo callback processing failed:", error);
+    // Non-2xx makes Kopo Kopo eligible to retry delivery.
+    return NextResponse.json({ error: "Callback processing failed." }, { status: 500 });
   }
 }

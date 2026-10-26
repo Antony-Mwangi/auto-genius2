@@ -1,6 +1,6 @@
 // app/api/mpesa/stk-push/route.ts
 import { NextResponse, type NextRequest } from "next/server";
-import { initiateStkPush } from "@/lib/daraja";
+import { initiateStkPush } from "@/lib/kopokopo";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import Order from "@/models/Order";
@@ -45,11 +45,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "This order is not awaiting a new payment." }, { status: 409 });
     }
 
-    await Order.updateOne(
-      { _id: orderId, paymentStatus: "pending" },
-      { $set: { paymentStatus: "pending" } }
-    );
-
     const phoneNumber = typeof phone === "string" ? phone.replace(/\s+/g, "") : "";
     if (!KENYAN_PHONE_REGEX.test(phoneNumber)) {
       return NextResponse.json(
@@ -67,13 +62,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Phone number does not match the order." }, { status: 400 });
     }
 
-    const callbackUrl = process.env.MPESA_CALLBACK_URL ||
+    const callbackUrl = process.env.KOPOKOPO_CALLBACK_URL ||
       (process.env.NEXT_PUBLIC_APP_URL
         ? `${process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/api/mpesa/callback`
         : "");
     if (!callbackUrl || !callbackUrl.startsWith("https://")) {
       return NextResponse.json(
-        { error: "Set MPESA_CALLBACK_URL to a public HTTPS callback URL." },
+        { error: "Set KOPOKOPO_CALLBACK_URL to a public HTTPS callback URL." },
         { status: 500 }
       );
     }
@@ -88,7 +83,8 @@ export async function POST(request: NextRequest) {
       phoneNumber,
       Math.round(numericAmount),
       orderId,
-      callbackUrl
+      callbackUrl,
+      order.customerName
     );
 
     if (!result.success) {
@@ -99,20 +95,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract CheckoutRequestID from Daraja response
-    const checkoutRequestId = result.data?.CheckoutRequestID;
-
-    if (!checkoutRequestId) {
-      console.error(`[${requestId}] No CheckoutRequestID in response`);
-      return NextResponse.json(
-        { error: "Payment initiated but no request ID returned." },
-        { status: 502 }
-      );
+    const paymentLocation = result.location;
+    if (!paymentLocation) {
+      return NextResponse.json({ error: "Kopo Kopo did not return a payment request location." }, { status: 502 });
+    }
+    const paymentRequestId = paymentLocation.split("/").filter(Boolean).at(-1);
+    if (!paymentRequestId) {
+      return NextResponse.json({ error: "Invalid Kopo Kopo payment request location." }, { status: 502 });
     }
 
     const updatedOrder = await Order.findOneAndUpdate(
       { _id: orderId, paymentStatus: "pending", checkoutRequestId: null },
-      { $set: { checkoutRequestId } },
+      { $set: { checkoutRequestId: paymentRequestId, kopokopoPaymentId: paymentRequestId, kopokopoPaymentLocation: paymentLocation } },
       { new: true }
     );
     if (!updatedOrder) {
@@ -124,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      checkoutRequestId,
+      checkoutRequestId: paymentRequestId,
       message: "STK push sent, awaiting confirmation",
     });
   } catch (error) {

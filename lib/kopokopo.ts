@@ -21,14 +21,14 @@ function getK2() {
     );
   }
 
-  const baseUrl = process.env.KOPOKOPO_BASE_URL;
+  const configuredBaseUrl = process.env.KOPOKOPO_BASE_URL;
   const clientId = process.env.KOPOKOPO_CLIENT_ID;
   const clientSecret = process.env.KOPOKOPO_CLIENT_SECRET;
   const apiKey = process.env.KOPOKOPO_API_KEY;
 
   // Fail loudly if any env var is missing at runtime
   const missing = [
-    !baseUrl && "KOPOKOPO_BASE_URL",
+    !configuredBaseUrl && "KOPOKOPO_BASE_URL",
     !clientId && "KOPOKOPO_CLIENT_ID",
     !clientSecret && "KOPOKOPO_CLIENT_SECRET",
     !apiKey && "KOPOKOPO_API_KEY",
@@ -40,17 +40,21 @@ function getK2() {
     );
   }
 
+  // app.kopokopo.com is the merchant dashboard, not the API host.
+  const baseUrl = configuredBaseUrl!.replace(/\/$/, "").replace(
+    /^https:\/\/app\.kopokopo\.com$/,
+    "https://api.kopokopo.com"
+  );
+  if (!baseUrl.startsWith("https://")) {
+    throw new Error("KOPOKOPO_BASE_URL must use HTTPS.");
+  }
+
   k2Instance = factory({
     baseUrl,
     clientId,
     clientSecret,
     apiKey,
   });
-
-  console.log(
-    "[KopoKopo] SDK initialized. baseUrl=" + baseUrl,
-    "availableKeys=" + JSON.stringify(Object.keys(k2Instance))
-  );
 
   return k2Instance;
 }
@@ -80,11 +84,6 @@ export async function getAccessToken(): Promise<string> {
         JSON.stringify(Object.keys(response || {}))
     );
   }
-
-  console.log(
-    "[KopoKopo] Access token acquired: " +
-      token.substring(0, 12) + "... (expires_in=" + response.expires_in + "s)"
-  );
 
   return token;
 }
@@ -123,7 +122,8 @@ export async function initiateStkPush(
   phoneNumber: string,
   amount: number,
   orderId: string,
-  callbackUrl: string
+  callbackUrl: string,
+  customerName = "Customer"
 ): Promise<{ success: boolean; location?: string; error?: string }> {
   try {
     const k2 = getK2();
@@ -151,57 +151,41 @@ export async function initiateStkPush(
       );
     }
 
+    const [firstName = "Customer", ...lastNameParts] = customerName.trim().split(/\s+/);
     const stkOptions = {
       tillNumber,
-      firstName: "Customer",
-      lastName: "",
+      firstName,
+      lastName: lastNameParts.join(" ") || "Customer",
       phoneNumber: formattedPhone,
       currency: "KES",
       amount: Math.round(amount),
       callbackUrl,
       paymentChannel: "M-PESA STK Push",
       accessToken,
-      metadata: { orderId },
+      metadata: { orderId, reference: orderId, notes: `Order ${orderId}` },
     };
 
-    console.log("[KopoKopo] STK push request:", {
-      tillNumber,
-      phoneNumber: formattedPhone,
-      amount: Math.round(amount),
-      callbackUrl,
-      orderId,
-    });
-
     const response = await StkService.initiateIncomingPayment(stkOptions);
-
-    console.log(
-      "[KopoKopo] STK push raw response:",
-      typeof response === "string" ? response : JSON.stringify(response)
-    );
 
     const locationUrl = extractLocationUrl(response);
 
     if (!locationUrl) {
-      throw new Error(
-        "No status URL found in response. Got: " +
-          (typeof response === "string" ? response : JSON.stringify(response))
-      );
+      throw new Error("Kopo Kopo did not return a payment-request location URL.");
     }
 
     return { success: true, location: locationUrl };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Kopo Kopo SDK throws errors with various shapes — normalise them
+    const sdkError = error as { message?: string; error_message?: string; error?: string; error_code?: string; code?: string };
     const message =
-      error?.message ||
-      error?.error_message ||
-      error?.error ||
-      JSON.stringify(error) ||
+      sdkError?.message ||
+      sdkError?.error_message ||
+      sdkError?.error ||
       "Failed to initiate payment";
 
     console.error("[KopoKopo] STK Push initiation failed:", {
       message,
-      code: error?.error_code || error?.code,
-      raw: error,
+      code: sdkError?.error_code || sdkError?.code,
     });
 
     return { success: false, error: String(message) };
@@ -234,17 +218,17 @@ export async function getStkStatus(locationUrl: string): Promise<{
     });
 
     return { success: true, data: status };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const sdkError = error as { message?: string; error_message?: string; error?: string; error_code?: string; code?: string };
     const message =
-      error?.message ||
-      error?.error_message ||
-      error?.error ||
-      JSON.stringify(error) ||
+      sdkError?.message ||
+      sdkError?.error_message ||
+      sdkError?.error ||
       "Failed to query payment status";
 
     console.error("[KopoKopo] STK status query failed:", {
       message,
-      code: error?.error_code || error?.code,
+      code: sdkError?.error_code || sdkError?.code,
     });
 
     return { success: false, error: String(message) };
