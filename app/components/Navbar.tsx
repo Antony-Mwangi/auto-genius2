@@ -59,6 +59,12 @@ export default function Navbar() {
             >
               About Us
             </Link>
+            <Link 
+              className="text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base" 
+              href="/ReturnPolicy"
+            >
+              Return Policy
+            </Link>
           </nav>
 
           {/* MOBILE MENU BUTTON */}
@@ -82,7 +88,7 @@ export default function Navbar() {
         {/* MOBILE NAVIGATION - Collapsible */}
         <div 
           className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            isMobileMenuOpen ? 'max-h-[28rem] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <nav className="flex flex-col pb-4 space-y-1 border-t border-white/10 pt-4">
@@ -132,6 +138,18 @@ export default function Navbar() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                 </svg>
                 About Us
+              </span>
+            </Link>
+            <Link 
+              onClick={closeMobileMenu}
+              className="text-gray-300 hover:text-orange-400 hover:bg-white/5 transition-colors duration-200 font-medium px-4 py-3 rounded-lg text-base" 
+              href="/ReturnPolicy"
+            >
+              <span className="flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                Return Policy
               </span>
             </Link>
           </nav>
