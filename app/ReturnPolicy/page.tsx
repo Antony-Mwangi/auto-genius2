@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
-import { useEffect, useRef, useState, ReactNode } from "react";
+import { ReactNode } from "react";
 
 // SVG Icons
 const Icons = {
@@ -120,7 +120,6 @@ interface PolicySection {
   content: ReactNode;
 }
 
-// Body text style — Inter Regular
 const bodyText = "font-inter font-normal text-gray-700 text-base leading-relaxed";
 const bodyStrong = "font-inter font-semibold text-[#1A1A1A]";
 
@@ -541,113 +540,56 @@ const policySections: PolicySection[] = [
 ];
 
 export default function ReturnPolicyPage() {
-  const [visibleSections, setVisibleSections] = useState<boolean[]>([]);
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  useEffect(() => {
-    const totalSections = 3;
-    setVisibleSections(new Array(totalSections).fill(false));
-
-    const observers = sectionRefs.current.map((ref, index) => {
-      if (!ref) return null;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setVisibleSections((prev) => {
-                const newState = [...prev];
-                newState[index] = true;
-                return newState;
-              });
-            }
-          });
-        },
-        { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
-      );
-
-      observer.observe(ref);
-      return observer;
-    });
-
-    return () => {
-      observers.forEach((observer) => {
-        if (observer) observer.disconnect();
-      });
-    };
-  }, []);
-
-  const getAnimationClass = (index: number) => {
-    return visibleSections[index]
-      ? "opacity-100 translate-y-0"
-      : "opacity-0 -translate-y-10";
-  };
-
   return (
     <main className="min-h-screen bg-white text-[#1A1A1A] flex flex-col font-inter">
       <Navbar />
 
       {/* HERO */}
-      <div
-        ref={(el) => { sectionRefs.current[0] = el; }}
-        className={`transition-all duration-700 ease-out ${getAnimationClass(0)}`}
-      >
-        <section className="text-center py-16 sm:py-20 lg:py-24 px-4 sm:px-6 bg-gradient-to-b from-[#F4761E]/5 to-white">
-          <Icons.ShieldCheck />
-          <h1 className="font-montserrat font-bold text-4xl sm:text-5xl lg:text-6xl tracking-wide text-[#F4761E]">
-            RETURN &amp; REFUND POLICY
-          </h1>
-          <p className="mt-4 sm:mt-6 font-inter font-semibold text-base sm:text-lg lg:text-xl text-[#1A1A1A]">
-            TRANSPARENT RETURNS. FAIR REFUNDS. ABSOLUTE RELIABILITY.
-          </p>
-          <div className="mt-6 w-24 h-1 bg-[#F4761E] mx-auto rounded-full" />
-        </section>
-      </div>
+      <section className="text-center py-16 sm:py-20 lg:py-24 px-4 sm:px-6 bg-gradient-to-b from-[#F4761E]/5 to-white">
+        <Icons.ShieldCheck />
+        <h1 className="font-montserrat font-bold text-4xl sm:text-5xl lg:text-6xl tracking-wide text-[#F4761E]">
+          RETURN &amp; REFUND POLICY
+        </h1>
+        <p className="mt-4 sm:mt-6 font-inter font-semibold text-base sm:text-lg lg:text-xl text-[#1A1A1A]">
+          TRANSPARENT RETURNS. FAIR REFUNDS. ABSOLUTE RELIABILITY.
+        </p>
+        <div className="mt-6 w-24 h-1 bg-[#F4761E] mx-auto rounded-full" />
+      </section>
 
       {/* INTRO */}
-      <div
-        ref={(el) => { sectionRefs.current[1] = el; }}
-        className={`transition-all duration-700 ease-out ${getAnimationClass(1)}`}
-      >
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <h2 className="font-montserrat font-bold text-2xl sm:text-3xl mb-4 text-[#F4761E] flex items-center gap-3">
-            <span className="inline-block w-1 h-8 bg-[#F4761E] rounded-full"></span>
-            Our Commitment
-          </h2>
-          <p className="font-inter font-normal text-gray-700 text-base sm:text-lg leading-relaxed max-w-3xl">
-            Autogenius Spare Parts Ltd is committed to providing quality automotive spare parts, reliable service and a convenient shopping experience. This policy outlines how returns, exchanges and refunds are handled for purchases made through our website or authorized sales channels, in accordance with applicable Kenyan law.
-          </p>
-        </section>
-      </div>
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full">
+        <h2 className="font-montserrat font-bold text-2xl sm:text-3xl mb-4 text-[#F4761E] flex items-center gap-3">
+          <span className="inline-block w-1 h-8 bg-[#F4761E] rounded-full"></span>
+          Our Commitment
+        </h2>
+        <p className="font-inter font-normal text-gray-700 text-base sm:text-lg leading-relaxed max-w-3xl">
+          Autogenius Spare Parts Ltd is committed to providing quality automotive spare parts, reliable service and a convenient shopping experience. This policy outlines how returns, exchanges and refunds are handled for purchases made through our website or authorized sales channels, in accordance with applicable Kenyan law.
+        </p>
+      </section>
 
       {/* POLICY SECTIONS */}
-      <div
-        ref={(el) => { sectionRefs.current[2] = el; }}
-        className={`transition-all duration-700 ease-out ${getAnimationClass(2)}`}
-      >
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
-          {policySections.map((section) => (
-            <div
-              key={section.id}
-              id={section.id}
-              className="scroll-mt-24"
-            >
-              <div className="flex items-start gap-3 mb-3">
-                <div className="flex-shrink-0 mt-0.5">{section.icon}</div>
-                <h3 className="font-montserrat font-bold text-xl sm:text-2xl text-[#F4761E] flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#F4761E] text-white text-xs font-inter font-semibold flex-shrink-0">
-                    {section.number}
-                  </span>
-                  {section.title}
-                </h3>
-              </div>
-              <div className="pl-0 sm:pl-8">
-                {section.content}
-              </div>
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12 w-full">
+        {policySections.map((section) => (
+          <div
+            key={section.id}
+            id={section.id}
+            className="scroll-mt-24"
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex-shrink-0 mt-0.5">{section.icon}</div>
+              <h3 className="font-montserrat font-bold text-xl sm:text-2xl text-[#F4761E] flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#F4761E] text-white text-xs font-inter font-semibold flex-shrink-0">
+                  {section.number}
+                </span>
+                {section.title}
+              </h3>
             </div>
-          ))}
-        </section>
-      </div>
+            <div className="pl-0 sm:pl-8">
+              {section.content}
+            </div>
+          </div>
+        ))}
+      </section>
 
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 w-full">
