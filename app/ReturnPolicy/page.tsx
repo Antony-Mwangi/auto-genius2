@@ -12,11 +12,7 @@ const fadeInUp: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-    },
+    transition: { type: "spring", stiffness: 100, damping: 15 },
   },
 };
 
@@ -24,10 +20,7 @@ const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.15,
-    },
+    transition: { staggerChildren: 0.08, delayChildren: 0.15 },
   },
 };
 
@@ -93,6 +86,52 @@ const Icons = {
   Scale: () => (
     <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z" />
+    </svg>
+  ),
+  ArrowsRightLeft: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+    </svg>
+  ),
+  Wrench: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+    </svg>
+  ),
+  ChatBubble: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.25 18.75 5.972 5.972 0 0 1 3 16.305A9.764 9.764 0 0 1 2.25 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+    </svg>
+  ),
+  XMark: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+    </svg>
+  ),
+  ClipboardDocument: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" />
+    </svg>
+  ),
+  Phone: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+    </svg>
+  ),
+  MapPin: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+    </svg>
+  ),
+  PencilSquare: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+    </svg>
+  ),
+  Sparkles: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
     </svg>
   ),
 };
@@ -260,39 +299,8 @@ const policySections = [
     ),
   },
   {
-    id: "special-orders",
-    number: "7",
-    title: "Special Orders and Internationally Sourced Products",
-    icon: <Icons.Globe />,
-    content: (
-      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
-        <p>
-          Products specially ordered, sourced, or imported by Autogenius from international suppliers or overseas markets specifically at a customer's request may be subject to additional terms and conditions, which will be communicated to the customer before the order is confirmed.
-        </p>
-        <p>
-          Once a special order has been confirmed and the sourcing, procurement, or importation process has commenced, cancellation or refund requests may be subject to costs already reasonably and irreversibly incurred by Autogenius on the customer's behalf, including supplier payments, international shipping, handling, customs clearance, and other directly related expenses, to the extent permitted by applicable law.
-        </p>
-        <p>
-          Where a special-order product cannot be supplied, is unavailable from the supplier, or cannot be delivered for reasons attributable to Autogenius or its supplier, Autogenius will communicate the available options, which may include a replacement, an agreed alternative product, or a refund, as appropriate under the circumstances and applicable law.
-        </p>
-        <p>
-          If a special-order product arrives damaged, defective, incorrect, or materially different from the specifications agreed upon with the customer, Autogenius will assess the claim and provide an appropriate remedy in accordance with applicable law.
-        </p>
-        <p>
-          Customers are responsible for providing accurate vehicle details, part specifications, and other information necessary to identify the correct product. However, this requirement does not exclude any rights or remedies available to customers where a product is incorrectly supplied, misrepresented, or otherwise fails to meet applicable legal requirements.
-        </p>
-        <p>
-          Any non-refundable supplier deposits or other special-order commitments will be disclosed to the customer before payment or order confirmation. Autogenius will not apply blanket exclusions, arbitrary deductions, or non-refundable terms that are prohibited by applicable law.
-        </p>
-        <p>
-          By confirming a special order, the customer acknowledges the specific sourcing arrangements, estimated delivery timelines, and applicable terms communicated before the order is placed.
-        </p>
-      </div>
-    ),
-  },
-  {
     id: "refunds",
-    number: "8",
+    number: "7",
     title: "Refund Policy",
     icon: <Icons.Banknotes />,
     content: (
@@ -324,8 +332,217 @@ const policySections = [
     ),
   },
   {
-    id: "consumer-rights",
+    id: "special-orders",
+    number: "8",
+    title: "Special Orders and Internationally Sourced Products",
+    icon: <Icons.Globe />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          Products specially ordered, sourced, or imported by Autogenius from international suppliers or overseas markets specifically at a customer's request may be subject to additional terms and conditions, which will be communicated to the customer before the order is confirmed.
+        </p>
+        <p>
+          Once a special order has been confirmed and the sourcing, procurement, or importation process has commenced, cancellation or refund requests may be subject to costs already reasonably and irreversibly incurred by Autogenius on the customer's behalf, including supplier payments, international shipping, handling, customs clearance, and other directly related expenses, to the extent permitted by applicable law.
+        </p>
+        <p>
+          Where a special-order product cannot be supplied, is unavailable from the supplier, or cannot be delivered for reasons attributable to Autogenius or its supplier, Autogenius will communicate the available options, which may include a replacement, an agreed alternative product, or a refund, as appropriate under the circumstances and applicable law.
+        </p>
+        <p>
+          If a special-order product arrives damaged, defective, incorrect, or materially different from the specifications agreed upon with the customer, Autogenius will assess the claim and provide an appropriate remedy in accordance with applicable law.
+        </p>
+        <p>
+          Customers are responsible for providing accurate vehicle details, part specifications, and other information necessary to identify the correct product. However, this requirement does not exclude any rights or remedies available to customers where a product is incorrectly supplied, misrepresented, or otherwise fails to meet applicable legal requirements.
+        </p>
+        <p>
+          Any non-refundable supplier deposits or other special-order commitments will be disclosed to the customer before payment or order confirmation. Autogenius will not apply blanket exclusions, arbitrary deductions, or non-refundable terms that are prohibited by applicable law.
+        </p>
+        <p>
+          By confirming a special order, the customer acknowledges the specific sourcing arrangements, estimated delivery timelines, and applicable terms communicated before the order is placed.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "exchanges",
     number: "9",
+    title: "Exchanges",
+    icon: <Icons.ArrowsRightLeft />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          Where an exchange is approved, Autogenius will make reasonable efforts to supply the correct replacement part, subject to availability.
+        </p>
+        <p>
+          If the replacement item has a different price, the price difference and any applicable delivery costs will be communicated before the exchange is completed.
+        </p>
+        <p>
+          If a suitable replacement is unavailable, Autogenius will discuss an appropriate alternative or refund, as applicable under the circumstances and Kenyan law.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "shipping-costs",
+    number: "10",
+    title: "Return Shipping and Transport Costs",
+    icon: <Icons.Truck />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          Where a return is necessary because Autogenius supplied an incorrect item, or where a defect or other issue attributable to Autogenius is confirmed, reasonable return and replacement transport arrangements will be communicated to the customer and handled in accordance with applicable law.
+        </p>
+        <p>
+          For approved change-of-mind returns, where legally permitted, the customer may be responsible for reasonable return transport costs if this responsibility was clearly disclosed before purchase.
+        </p>
+        <p>
+          Customers should not send items back before receiving return instructions from our customer support team.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "warranty",
+    number: "11",
+    title: "Warranty Claims",
+    icon: <Icons.Wrench />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>Some products may be covered by a manufacturer's, distributor's or supplier's warranty.</p>
+        <p>Warranty coverage may vary depending on the product, manufacturer and applicable terms.</p>
+        <p>Customers should retain their receipts and any warranty documentation.</p>
+        <p>Warranty claims may require inspection by Autogenius, an authorized technician, the manufacturer or the relevant supplier.</p>
+        <p>
+          A warranty claim may not be approved where the evidence establishes that the defect resulted from improper installation, misuse, unauthorized modification or other excluded causes under the applicable warranty terms. Any assessment remains subject to applicable consumer protection law.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "how-to-request",
+    number: "12",
+    title: "How to Request a Return, Exchange or Refund",
+    icon: <Icons.ClipboardDocument />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>To initiate a request:</p>
+        <ol className="space-y-2 list-none">
+          {[
+            "Contact Autogenius through our official customer support channels.",
+            "Provide your order number or proof of purchase.",
+            "Explain the reason for the request.",
+            "Submit photographs, videos, part numbers or other evidence where relevant.",
+            "Wait for confirmation and instructions before returning the item.",
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="mt-0.5 w-6 h-6 rounded-full bg-orange-100 text-orange-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                {i + 1}
+              </span>
+              <span>{item}</span>
+            </li>
+          ))}
+        </ol>
+        <p>
+          Our team will review the request and communicate the next steps, including any inspection, collection, exchange or refund arrangements.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "cancellation",
+    number: "13",
+    title: "Order Cancellation",
+    icon: <Icons.XMark />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>Customers who wish to cancel an order should contact Autogenius as soon as possible.</p>
+        <p>
+          Cancellation may be possible before an order has been dispatched or a special sourcing commitment has been made. Once an order has been dispatched, imported, customized or specially sourced, cancellation will be assessed according to the order terms and applicable law.
+        </p>
+        <p>
+          Any cancellation charge must be lawful and appropriately disclosed. Statutory cancellation and refund rights will not be restricted by this provision.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "delivery-discrepancies",
+    number: "14",
+    title: "Online Orders and Delivery Discrepancies",
+    icon: <Icons.Truck />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          Customers should inspect deliveries upon receipt and report visible damage, missing items or discrepancies promptly.
+        </p>
+        <p>
+          Where possible, customers should retain the packaging and delivery documentation until the order has been checked.
+        </p>
+        <p>
+          Failure to report an issue immediately will not automatically remove any rights available under applicable law.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "customer-support",
+    number: "15",
+    title: "Customer Support",
+    icon: <Icons.ChatBubble />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>For return, exchange, refund and warranty assistance, please contact:</p>
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2.5">
+          <p className="font-bold text-gray-900">Autogenius Spare Parts Ltd</p>
+          <div className="flex items-start gap-2.5">
+            <Icons.MapPin />
+            <span><strong className="text-gray-900">Location:</strong> MSP Plaza, Kirinyaga Road, Nairobi, Kenya</span>
+          </div>
+          <div className="flex items-start gap-2.5">
+            <Icons.Phone />
+            <span><strong className="text-gray-900">Call/WhatsApp:</strong> 0714200500</span>
+          </div>
+        </div>
+        <p>
+          Please include your order number and the vehicle details relevant to your request so that our team can assist you efficiently.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "policy-updates",
+    number: "16",
+    title: "Policy Updates",
+    icon: <Icons.PencilSquare />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          Autogenius Spare Parts Ltd reserves the right to update this policy when necessary to reflect changes in our operations, products, service arrangements or applicable law.
+        </p>
+        <p>
+          The version published on our website will indicate the effective date. Any update will not remove rights that a customer has already acquired under applicable law or the terms governing an existing transaction.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "our-commitment",
+    number: "17",
+    title: "Our Commitment",
+    icon: <Icons.Sparkles />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          At Autogenius, we believe that <em className="text-gray-900 font-semibold">quality, trust and reliability drive every journey</em>. We are committed to resolving genuine customer concerns fairly, supplying the right parts and building lasting relationships with our customers.
+        </p>
+        <p className="font-bold text-orange-600">
+          Autogenius Spare Parts Ltd — Driven by Genius. Powered by Quality.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "consumer-rights",
+    number: "18",
     title: "Consumer Rights",
     icon: <Icons.Scale />,
     content: (
