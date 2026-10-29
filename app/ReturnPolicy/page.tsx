@@ -58,9 +58,9 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
     </svg>
   ),
-  ArrowsRightLeft: () => (
+  Car: () => (
     <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 13.875h1.5a1.125 1.125 0 0 1 1.125 1.125v1.5m-3-2.625t.75-.75h7.5M4.5 9h10.125c.621 0 1.125.504 1.125 1.125v4.5m-12.375 0h.008v.008H3.375v-.008Z" />
     </svg>
   ),
   Banknotes: () => (
@@ -83,14 +83,16 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
     </svg>
   ),
+  Globe: () => (
+    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  ),
   Scale: () => (
     <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z" />
-    </svg>
-  ),
-  PencilSquare: () => (
-    <svg className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
     </svg>
   ),
 };
@@ -98,30 +100,36 @@ const Icons = {
 // Policy section data
 const policySections = [
   {
-    id: "return-period",
+    id: "introduction",
     number: "1",
-    title: "Return Period",
-    icon: <Icons.Calendar />,
+    title: "Return Policy",
+    icon: <Icons.DocumentText />,
     content: (
-      <p className="text-gray-700 text-base leading-relaxed">
-        Customers may request a return within <strong className="text-gray-900">7 calendar days</strong> of receiving their order, provided the item meets the eligibility conditions outlined in this policy.
-      </p>
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          At Autogenius Spare Parts Ltd, we are committed to providing quality automotive spare parts, reliable service and a convenient shopping experience. Our goal is to ensure that every customer receives the correct parts for their vehicle and enjoys confidence when shopping with us.
+        </p>
+        <p>
+          This policy explains the conditions under which customers may request a return, exchange or refund for purchases made through the Autogenius e-commerce website or our authorized sales channels.
+        </p>
+      </div>
     ),
   },
   {
-    id: "eligible-returns",
+    id: "eligibility",
     number: "2",
-    title: "Eligible Returns",
+    title: "Eligibility for Returns and Exchanges",
     icon: <Icons.CheckCircle />,
     content: (
       <div className="space-y-3">
-        <p className="text-gray-700 text-base leading-relaxed">Returns may be accepted under the following circumstances:</p>
+        <p className="text-gray-700 text-base leading-relaxed">Customers may request a return or exchange under the following circumstances:</p>
         <ul className="space-y-2">
           {[
-            { label: "Wrong item delivered", desc: "The item received differs from the item ordered." },
-            { label: "Damaged item", desc: "The item arrives damaged before or during delivery." },
-            { label: "Defective item", desc: "The part has a manufacturing defect, subject to inspection and applicable warranty terms." },
-            { label: "Incorrect fitment", desc: "The part is incompatible with the vehicle despite the customer providing accurate vehicle details and Autogenius Spare Parts Ltd confirming compatibility." },
+            { label: "Incorrect item supplied", desc: "The item delivered does not match the item ordered." },
+            { label: "Incorrect vehicle compatibility", desc: "The part supplied does not fit the vehicle despite the customer providing accurate vehicle details and Autogenius confirming compatibility." },
+            { label: "Damaged item", desc: "The item arrives damaged before or during delivery, subject to verification." },
+            { label: "Defective item", desc: "The part is found to have a manufacturing defect, subject to applicable warranty terms and assessment." },
+            { label: "Order discrepancy", desc: "The quantity, specification or description of the supplied item differs materially from the confirmed order." },
           ].map((item) => (
             <li key={item.label} className="flex items-start gap-3 text-gray-700 text-base leading-relaxed">
               <span className="mt-2 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
@@ -131,23 +139,47 @@ const policySections = [
             </li>
           ))}
         </ul>
+        <p className="text-gray-700 text-base leading-relaxed">
+          All requests will be reviewed individually and handled in accordance with this policy and applicable Kenyan law.
+        </p>
       </div>
     ),
   },
   {
-    id: "conditions-for-returns",
+    id: "timeframe",
     number: "3",
-    title: "Conditions for Returns",
+    title: "Return Timeframe",
+    icon: <Icons.Calendar />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          Customers should notify Autogenius of any return or exchange request within <strong className="text-gray-900">7 calendar days</strong> of receiving the item, provided the item meets the eligibility conditions outlined in this policy.
+        </p>
+        <p>
+          For defective products, statutory rights and any applicable warranty terms will continue to apply, even where the above notification period has passed.
+        </p>
+        <p>
+          Customers should contact our customer support team as soon as an issue is discovered and provide the order number, a description of the problem and clear photographs or videos where relevant.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "conditions",
+    number: "4",
+    title: "Conditions for Returned Items",
     icon: <Icons.ClipboardCheck />,
     content: (
       <div className="space-y-3">
-        <p className="text-gray-700 text-base leading-relaxed">To qualify for a return:</p>
+        <p className="text-gray-700 text-base leading-relaxed">
+          Except where the item is defective, damaged, incorrectly supplied or otherwise subject to a legal remedy, returned products should meet the following conditions:
+        </p>
         <ul className="space-y-2">
           {[
-            "The item must be unused, uninstalled, and in its original condition, except where reasonable inspection is necessary to identify a defect.",
-            "Original packaging, labels, and accessories should be included where reasonably possible.",
-            "Proof of purchase, such as an order number or receipt, must be provided.",
-            "The return request must be submitted within the applicable return period.",
+            "The item must be unused, uninstalled and in its original condition.",
+            "Original packaging, labels, accessories and accompanying documents should be retained.",
+            "The item must not show signs of improper handling, physical damage, alteration or misuse.",
+            "The item must be accompanied by proof of purchase, such as an order confirmation, receipt or invoice.",
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-3 text-gray-700 text-base leading-relaxed">
               <span className="mt-2 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
@@ -155,25 +187,65 @@ const policySections = [
             </li>
           ))}
         </ul>
+        <p className="text-gray-700 text-base leading-relaxed">
+          <strong className="text-gray-900">Important to note:</strong> Automotive parts that have been installed, modified, used or damaged after delivery may require technical inspection before a return, exchange or warranty claim can be approved. This does not limit any remedies available under applicable law.
+        </p>
       </div>
     ),
   },
   {
-    id: "non-returnable-items",
-    number: "4",
+    id: "compatibility",
+    number: "5",
+    title: "Vehicle Compatibility and Correct Part Selection",
+    icon: <Icons.Car />,
+    content: (
+      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
+        <p>
+          Autogenius supplies spare parts for a wide range of Japanese and other vehicle makes and models, including Toyota, Nissan, Subaru, Mazda, Mitsubishi, Suzuki and Honda.
+        </p>
+        <p>Customers are encouraged to provide accurate vehicle information, including:</p>
+        <ul className="space-y-2">
+          {[
+            "Vehicle make and model.",
+            "Year of manufacture and model generation.",
+            "Engine capacity or engine code, where applicable.",
+            "Chassis number or VIN, where available.",
+            "Part number, photographs or other relevant specifications.",
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <p>
+          Where Autogenius confirms compatibility using the information provided, and the supplied item is nevertheless incompatible, the customer may request an assessment for an exchange or refund.
+        </p>
+        <p>
+          Where the customer independently selects an item without a compatibility confirmation from Autogenius and provides incomplete or inaccurate vehicle information, the request will be assessed based on the circumstances and applicable consumer rights.
+        </p>
+        <p>Customers should verify part compatibility before installation. Professional installation is recommended.</p>
+      </div>
+    ),
+  },
+  {
+    id: "non-returnable",
+    number: "6",
     title: "Non-Returnable Items",
     icon: <Icons.XCircle />,
     content: (
       <div className="space-y-3">
         <p className="text-gray-700 text-base leading-relaxed">
-          The following items are generally not eligible for return unless defective, incorrectly supplied, misdescribed, or otherwise covered by applicable law:
+          Subject to applicable law and any defect, misdescription or other legally recognized remedy, the following items may not qualify for a change-of-mind return:
         </p>
         <ul className="space-y-2">
           {[
-            "Parts that have been installed, used, modified, or damaged after delivery.",
+            "Special-order, customized or specially sourced parts.",
+            "Electrical or electronic components that have been installed, connected or damaged through improper handling.",
+            "Used, dismantled or salvage parts sold with their condition clearly disclosed.",
+            "Items damaged through improper installation, misuse, unauthorized modification or failure to follow manufacturer instructions.",
+            "Items sold under a clearly disclosed final-sale arrangement, where permitted by law.",
             "Parts ordered incorrectly by the customer when the item supplied matches the order and the compatibility information provided.",
-            "Custom-made or specially ordered parts where the return restriction was disclosed before purchase.",
-            "Items without sufficient proof of purchase.",
           ].map((item, i) => (
             <li key={i} className="flex items-start gap-3 text-gray-700 text-base leading-relaxed">
               <span className="mt-2 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
@@ -181,125 +253,84 @@ const policySections = [
             </li>
           ))}
         </ul>
+        <p className="text-gray-700 text-base leading-relaxed">
+          This section does not exclude a customer's statutory rights where an item is defective, misdescribed, not fit for its represented purpose or otherwise qualifies for a legal remedy.
+        </p>
       </div>
     ),
   },
   {
-    id: "incorrect-orders",
-    number: "5",
-    title: "Incorrect Orders and Compatibility Issues",
-    icon: <Icons.ArrowsRightLeft />,
+    id: "special-orders",
+    number: "7",
+    title: "Special Orders and Internationally Sourced Products",
+    icon: <Icons.Globe />,
     content: (
       <div className="space-y-3 text-gray-700 text-base leading-relaxed">
         <p>
-          Customers are encouraged to confirm their vehicle's make, model, year, engine type, and part number before placing an order.
+          Products specially ordered, sourced, or imported by Autogenius from international suppliers or overseas markets specifically at a customer's request may be subject to additional terms and conditions, which will be communicated to the customer before the order is confirmed.
         </p>
         <p>
-          If a customer orders the wrong part, a return or exchange may be considered if the item remains unused, uninstalled, and eligible under this policy. The customer may be responsible for return shipping costs.
+          Once a special order has been confirmed and the sourcing, procurement, or importation process has commenced, cancellation or refund requests may be subject to costs already reasonably and irreversibly incurred by Autogenius on the customer's behalf, including supplier payments, international shipping, handling, customs clearance, and other directly related expenses, to the extent permitted by applicable law.
         </p>
         <p>
-          If Autogenius Spare Parts Ltd confirms compatibility but supplies an incompatible part despite receiving accurate vehicle information, the company will arrange an appropriate replacement, exchange, or refund.
+          Where a special-order product cannot be supplied, is unavailable from the supplier, or cannot be delivered for reasons attributable to Autogenius or its supplier, Autogenius will communicate the available options, which may include a replacement, an agreed alternative product, or a refund, as appropriate under the circumstances and applicable law.
+        </p>
+        <p>
+          If a special-order product arrives damaged, defective, incorrect, or materially different from the specifications agreed upon with the customer, Autogenius will assess the claim and provide an appropriate remedy in accordance with applicable law.
+        </p>
+        <p>
+          Customers are responsible for providing accurate vehicle details, part specifications, and other information necessary to identify the correct product. However, this requirement does not exclude any rights or remedies available to customers where a product is incorrectly supplied, misrepresented, or otherwise fails to meet applicable legal requirements.
+        </p>
+        <p>
+          Any non-refundable supplier deposits or other special-order commitments will be disclosed to the customer before payment or order confirmation. Autogenius will not apply blanket exclusions, arbitrary deductions, or non-refundable terms that are prohibited by applicable law.
+        </p>
+        <p>
+          By confirming a special order, the customer acknowledges the specific sourcing arrangements, estimated delivery timelines, and applicable terms communicated before the order is placed.
         </p>
       </div>
     ),
   },
   {
     id: "refunds",
-    number: "6",
-    title: "Refunds",
+    number: "8",
+    title: "Refund Policy",
     icon: <Icons.Banknotes />,
     content: (
-      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
-        <p>All returned items are subject to inspection before a refund is approved.</p>
-        <p>Approved refunds will be processed through the original payment method where possible or another mutually agreed method.</p>
-        <p>
-          Autogenius Spare Parts Ltd aims to process approved refunds within <strong className="text-gray-900">5–10 business days</strong> after approval. The time required for funds to reflect in the customer's account may depend on the payment provider.
+      <div className="space-y-3">
+        <p className="text-gray-700 text-base leading-relaxed">
+          Where a refund is approved, Autogenius will communicate the applicable refund method and processing timeframe to the customer.
         </p>
-        <p>Where required by law or appropriate because of the company's error, applicable delivery charges will also be refunded.</p>
-      </div>
-    ),
-  },
-  {
-    id: "exchanges",
-    number: "7",
-    title: "Exchanges and Replacements",
-    icon: <Icons.Refresh />,
-    content: (
-      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
-        <p>Customers may request an exchange or replacement instead of a refund, subject to product availability and approval.</p>
-        <p>Replacement items will generally be dispatched after the returned item has been received and inspected, unless another arrangement is agreed upon.</p>
-      </div>
-    ),
-  },
-  {
-    id: "return-shipping",
-    number: "8",
-    title: "Return Shipping Costs",
-    icon: <Icons.Truck />,
-    content: (
-      <ul className="space-y-2">
-        {[
-          { label: "Wrong item supplied or qualifying defective item", desc: "Autogenius Spare Parts Ltd will arrange or cover reasonable return shipping costs, as applicable." },
-          { label: "Customer ordering error", desc: "The customer may be responsible for return shipping costs." },
-          { label: "Other approved returns", desc: "Applicable shipping costs will be communicated before the return is completed." },
-        ].map((item) => (
-          <li key={item.label} className="flex items-start gap-3 text-gray-700 text-base leading-relaxed">
-            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />
-            <span>
-              <strong className="text-gray-900">{item.label}:</strong> {item.desc}
-            </span>
-          </li>
-        ))}
-      </ul>
-    ),
-  },
-  {
-    id: "return-procedure",
-    number: "9",
-    title: "Return Procedure",
-    icon: <Icons.DocumentText />,
-    content: (
-      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
-        <p>Customers requesting a return must provide the following information through the return request process on the website:</p>
-        <ol className="space-y-2 list-none">
+        <ul className="space-y-2">
           {[
-            "Order number or proof of purchase.",
-            "Name and part number of the item.",
-            "Reason for the return.",
-            "Photographs or videos showing the issue, where applicable.",
+            "Refunds will generally be made through the original payment method where reasonably available.",
+            "Where the original method cannot be used, an alternative mutually agreed method may be arranged.",
+            "Refunds for eligible M-Pesa, bank, card or other electronic payments will be processed in accordance with the relevant payment provider's procedures.",
+            "Any refund will reflect the amount the customer is legally entitled to recover under the circumstances.",
+            "Autogenius Spare Parts Ltd aims to process approved refunds within 5–10 business days after approval. The time required for funds to reflect in the customer's account may depend on the payment provider.",
+            "Delivery charges, return transport costs and other related charges will be handled in accordance with applicable law and the reason for the return.",
           ].map((item, i) => (
-            <li key={i} className="flex items-start gap-3">
+            <li key={i} className="flex items-start gap-3 text-gray-700 text-base leading-relaxed">
               <span className="mt-0.5 w-6 h-6 rounded-full bg-orange-100 text-orange-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
                 {i + 1}
               </span>
               <span>{item}</span>
             </li>
           ))}
-        </ol>
-        <p>Customers must receive return instructions before sending items back. Returned items should be sent to the designated return address provided by the company.</p>
+        </ul>
+        <p className="text-gray-700 text-base leading-relaxed">
+          Autogenius will not impose an arbitrary restocking fee or deduction where prohibited by law.
+        </p>
       </div>
     ),
   },
   {
-    id: "warranty",
-    number: "10",
-    title: "Warranty and Consumer Rights",
+    id: "consumer-rights",
+    number: "9",
+    title: "Consumer Rights",
     icon: <Icons.Scale />,
     content: (
-      <div className="space-y-3 text-gray-700 text-base leading-relaxed">
-        <p>Certain spare parts may be covered by manufacturer or supplier warranties. Applicable warranty terms and claim procedures will be communicated where relevant.</p>
-        <p>Nothing in this policy excludes or limits any mandatory consumer rights available under Kenyan law.</p>
-      </div>
-    ),
-  },
-  {
-    id: "policy-amendments",
-    number: "11",
-    title: "Policy Amendments",
-    icon: <Icons.PencilSquare />,
-    content: (
       <p className="text-gray-700 text-base leading-relaxed">
-        Autogenius Spare Parts Ltd reserves the right to update this policy when necessary. Any revisions will be published on the company's website and will apply in accordance with applicable law.
+        Nothing in this policy excludes or limits any mandatory consumer rights available under Kenyan law. Customers retain all statutory rights and remedies in respect of defective, misdescribed or unfit products.
       </p>
     ),
   },
@@ -411,8 +442,7 @@ export default function ReturnPolicyPage() {
             animate={visibleSections[1] ? { opacity: 1 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Autogenius Spare Parts Ltd is committed to providing quality automotive spare parts and ensuring customer satisfaction.
-            This policy outlines the conditions and procedures for returning items purchased through our e-commerce website.
+            Autogenius Spare Parts Ltd is committed to providing quality automotive spare parts, reliable service and a convenient shopping experience. This policy outlines how returns, exchanges and refunds are handled for purchases made through our website or authorized sales channels, in accordance with applicable Kenyan law.
           </motion.p>
         </section>
       </motion.div>
