@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Footer from "@/app/components/Footer";
+import BrandMarquee from "@/app/components/BrandMarquee";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 // SVG Icons
@@ -95,7 +96,12 @@ const Icons = {
     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="9 18 15 12 9 6"/>
     </svg>
-  )
+  ),
+  Menu: () => (
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    </svg>
+  ),
 };
 
 // Interfaces
@@ -185,18 +191,13 @@ const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
+    transition: { staggerChildren: 0.1 },
+  },
 };
 
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1
-  }
+  visible: { y: 0, opacity: 1 },
 };
 
 export default function ShopPage() {
@@ -212,6 +213,7 @@ export default function ShopPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quoteProduct, setQuoteProduct] = useState<Product | null>(null);
@@ -265,7 +267,7 @@ export default function ShopPage() {
         const chassisMatch = p.chassisNumber ? p.chassisNumber.toLowerCase().includes(term) : false;
         const nameMatch = p.name.toLowerCase().includes(term);
         const descMatch = p.description ? p.description.toLowerCase().includes(term) : false;
-        const variantMatch = p.variants?.some(v => v.name.toLowerCase().includes(term)) || false;
+        const variantMatch = p.variants?.some((v) => v.name.toLowerCase().includes(term)) || false;
         return chassisMatch || nameMatch || descMatch || variantMatch;
       });
     }
@@ -293,18 +295,19 @@ export default function ShopPage() {
     const cartItem: CartItem = {
       product,
       quantity: 1,
-      selectedVariant: variant
+      selectedVariant: variant,
     };
 
-    const existingItem = currentCart.find((item) =>
-      item.product._id === product._id &&
-      (!variant || (item.selectedVariant?._id === variant._id))
+    const existingItem = currentCart.find(
+      (item) =>
+        item.product._id === product._id &&
+        (!variant || item.selectedVariant?._id === variant._id)
     );
 
     if (existingItem) {
       currentCart = currentCart.map((item) =>
         item.product._id === product._id &&
-        (!variant || (item.selectedVariant?._id === variant._id))
+        (!variant || item.selectedVariant?._id === variant._id)
           ? { ...item, quantity: item.quantity + 1 }
           : item
       );
@@ -321,14 +324,14 @@ export default function ShopPage() {
     setSelectedProduct(product);
     setCurrentImageIndex(0);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeProductDetails = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
     setCurrentImageIndex(0);
-    document.body.style.overflow = 'unset';
+    document.body.style.overflow = "unset";
   };
 
   const nextImage = () => {
@@ -339,7 +342,9 @@ export default function ShopPage() {
 
   const prevImage = () => {
     if (selectedProduct?.images) {
-      setCurrentImageIndex((prev) => (prev - 1 + selectedProduct.images!.length) % selectedProduct.images!.length);
+      setCurrentImageIndex(
+        (prev) => (prev - 1 + selectedProduct.images!.length) % selectedProduct.images!.length
+      );
     }
   };
 
@@ -349,39 +354,41 @@ export default function ShopPage() {
     setSelectedShippingMethod("air");
     setQuoteMessage("");
     setShowQuoteModal(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeQuoteModal = () => {
     setShowQuoteModal(false);
     setQuoteProduct(null);
     setSelectedVariantForQuote(null);
-    document.body.style.overflow = 'unset';
+    document.body.style.overflow = "unset";
   };
 
   const handleQuoteRequest = () => {
     if (!quoteProduct) return;
 
-    const variantInfo = selectedVariantForQuote ? `
+    const variantInfo = selectedVariantForQuote
+      ? `
 Variant: ${selectedVariantForQuote.name}
 Unit: ${selectedVariantForQuote.unit}
 Price: Ksh ${selectedVariantForQuote.price.toLocaleString()}
-Stock: ${selectedVariantForQuote.quantity} units` : '';
+Stock: ${selectedVariantForQuote.quantity} units`
+      : "";
 
     let shippingDetails = "";
     if (quoteProduct.shippingOptions) {
       if (selectedShippingMethod === "air" && quoteProduct.shippingOptions.air) {
         shippingDetails = `
 Shipping Method: Air Freight (Express)
-Delivery Time: ${quoteProduct.shippingOptions.air.deliveryTime || '3-7 business days'}
+Delivery Time: ${quoteProduct.shippingOptions.air.deliveryTime || "3-7 business days"}
 Shipping Cost: Ksh ${(quoteProduct.shippingOptions.air.cost || 0).toLocaleString()}
-Description: ${quoteProduct.shippingOptions.air.description || 'Express shipping by air freight'}`;
+Description: ${quoteProduct.shippingOptions.air.description || "Express shipping by air freight"}`;
       } else if (selectedShippingMethod === "sea" && quoteProduct.shippingOptions.sea) {
         shippingDetails = `
 Shipping Method: Sea Freight (Standard)
-Delivery Time: ${quoteProduct.shippingOptions.sea.deliveryTime || '20-35 business days'}
+Delivery Time: ${quoteProduct.shippingOptions.sea.deliveryTime || "20-35 business days"}
 Shipping Cost: Ksh ${(quoteProduct.shippingOptions.sea.cost || 0).toLocaleString()}
-Description: ${quoteProduct.shippingOptions.sea.description || 'Standard shipping by sea freight'}`;
+Description: ${quoteProduct.shippingOptions.sea.description || "Standard shipping by sea freight"}`;
       }
     }
 
@@ -393,11 +400,11 @@ I would like to request a quote for the following product:
 Product: ${quoteProduct.name}
 Category: ${quoteProduct.category}
 Price: ${getPriceDisplay(quoteProduct)}
-Chassis Number: ${quoteProduct.chassisNumber || 'N/A'}
-Description: ${quoteProduct.description || 'No description available'}
+Chassis Number: ${quoteProduct.chassisNumber || "N/A"}
+Description: ${quoteProduct.description || "No description available"}
 ${variantInfo}
 ${shippingDetails}
-${quoteMessage ? `Additional Message: ${quoteMessage}` : ''}
+${quoteMessage ? `Additional Message: ${quoteMessage}` : ""}
 
 Please get back to me with a quotation.
 
@@ -405,75 +412,55 @@ Thank you!`.trim();
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, "_blank");
     closeQuoteModal();
   };
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         closeProductDetails();
         closeQuoteModal();
+        setMobileMenuOpen(false);
       }
     };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
   const getAvailabilityBadge = (product: Product) => {
     const display = product.availabilityDisplay || {
-      status: 'Unknown',
-      badgeColor: 'gray',
-      icon: '❓',
-      message: 'Availability unknown'
+      status: "Unknown",
+      badgeColor: "gray",
+      icon: "❓",
+      message: "Availability unknown",
     };
 
     let statusText = display.status;
     let badgeColor = display.badgeColor;
 
-    if (display.status === 'Out of Stock') {
-      statusText = 'Confirm Availability';
-      badgeColor = 'orange';
+    if (display.status === "Out of Stock") {
+      statusText = "Confirm Availability";
+      badgeColor = "orange";
     }
 
     const colorMap: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-      green: {
-        bg: 'bg-green-100',
-        border: 'border-green-300',
-        text: 'text-green-700',
-        dot: 'bg-green-500'
-      },
-      blue: {
-        bg: 'bg-blue-100',
-        border: 'border-blue-300',
-        text: 'text-blue-700',
-        dot: 'bg-blue-500'
-      },
-      red: {
-        bg: 'bg-red-100',
-        border: 'border-red-300',
-        text: 'text-red-700',
-        dot: 'bg-red-500'
-      },
-      orange: {
-        bg: 'bg-orange-100',
-        border: 'border-orange-300',
-        text: 'text-orange-700',
-        dot: 'bg-orange-500'
-      },
-      gray: {
-        bg: 'bg-gray-100',
-        border: 'border-gray-300',
-        text: 'text-gray-700',
-        dot: 'bg-gray-500'
-      }
+      green: { bg: "bg-green-100", border: "border-green-300", text: "text-green-700", dot: "bg-green-500" },
+      blue: { bg: "bg-blue-100", border: "border-blue-300", text: "text-blue-700", dot: "bg-blue-500" },
+      red: { bg: "bg-red-100", border: "border-red-300", text: "text-red-700", dot: "bg-red-500" },
+      orange: { bg: "bg-orange-100", border: "border-orange-300", text: "text-orange-700", dot: "bg-orange-500" },
+      gray: { bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-700", dot: "bg-gray-500" },
     };
 
     const colors = colorMap[badgeColor] || colorMap.gray;
 
     return (
-      <span className={`inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold ${colors.text} ${colors.bg} ${colors.border} border px-2.5 py-1 rounded-full shadow-sm`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} ${badgeColor === 'green' ? 'animate-pulse' : ''}`}></span>
+      <span
+        className={`inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold ${colors.text} ${colors.bg} ${colors.border} border px-2.5 py-1 rounded-full shadow-sm`}
+      >
+        <span
+          className={`w-1.5 h-1.5 rounded-full ${colors.dot} ${badgeColor === "green" ? "animate-pulse" : ""}`}
+        ></span>
         {display.icon} {statusText}
         {product.isLowStock && (
           <span className="text-[8px] sm:text-[9px] text-orange-500 ml-1 font-bold">⚠ Low Stock</span>
@@ -488,32 +475,32 @@ Thank you!`.trim();
     const options = [];
     if (quoteProduct.shippingOptions.air?.enabled !== false) {
       options.push({
-        value: 'air',
-        label: 'Air Freight (Express)',
+        value: "air",
+        label: "Air Freight (Express)",
         icon: <Icons.Airplane />,
-        deliveryTime: quoteProduct.shippingOptions.air?.deliveryTime || '3-7 business days',
-        cost: quoteProduct.shippingOptions.air?.cost || 0
+        deliveryTime: quoteProduct.shippingOptions.air?.deliveryTime || "3-7 business days",
+        cost: quoteProduct.shippingOptions.air?.cost || 0,
       });
     }
     if (quoteProduct.shippingOptions.sea?.enabled !== false) {
       options.push({
-        value: 'sea',
-        label: 'Sea Freight (Standard)',
+        value: "sea",
+        label: "Sea Freight (Standard)",
         icon: <Icons.Ship />,
-        deliveryTime: quoteProduct.shippingOptions.sea?.deliveryTime || '20-35 business days',
-        cost: quoteProduct.shippingOptions.sea?.cost || 0
+        deliveryTime: quoteProduct.shippingOptions.sea?.deliveryTime || "20-35 business days",
+        cost: quoteProduct.shippingOptions.sea?.cost || 0,
       });
     }
     return options;
   };
 
   const shouldShowQuoteButton = (product: Product) => {
-    return !product.isPurchasable || product.availabilityStatus === 'INTERNATIONAL_SUPPLIER';
+    return !product.isPurchasable || product.availabilityStatus === "INTERNATIONAL_SUPPLIER";
   };
 
   const getProductImage = (product: Product): string => {
     if (product.images && product.images.length > 0) {
-      const primary = product.images.find(img => img.isPrimary);
+      const primary = product.images.find((img) => img.isPrimary);
       return primary ? primary.url : product.images[0].url;
     }
     return product.imageUrl;
@@ -522,14 +509,19 @@ Thank you!`.trim();
   return (
     <main className="min-h-screen bg-white text-gray-900 flex flex-col antialiased font-sans">
 
-      {/* ===== HEADER — STYLED LIKE NAVBAR ===== */}
+      {/* ===== RESPONSIVE HEADER WITH BRAND LOGO MARQUEE ===== */}
       <header className="border-b border-white/10 bg-black shadow-lg sticky top-0 z-40">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex items-center justify-between h-20 sm:h-24">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6">
+          {/* Row 1: logo | nav + brand marquee | actions */}
+          <div className="flex items-center justify-between gap-3 h-16 sm:h-20 md:h-24">
 
             {/* LOGO */}
-            <Link href="/shop" className="flex items-center select-none shrink-0">
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+            <Link href="/shop" className="flex items-center shrink-0 group">
+              <motion.div
+                whileHover={{ rotate: 360, scale: 1.08 }}
+                transition={{ duration: 0.7, ease: "easeInOut" }}
+                className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center"
+              >
                 <Image
                   src="/logo.jpeg"
                   alt="AUTOGENIUS Spare Parts LTD"
@@ -537,62 +529,60 @@ Thank you!`.trim();
                   priority
                   className="object-contain mix-blend-screen bg-transparent"
                 />
-              </div>
+              </motion.div>
             </Link>
 
-            {/* DESKTOP NAV */}
-            <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-              <Link
-                href="/shop"
-                className="text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
-              >
-                Shop
-              </Link>
-              <Link
-                href="/dashboard"
-                className="text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
-              >
-                My Orders
-              </Link>
-              <Link
-                href="/about"
-                className="text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
-              >
-                About Us
-              </Link>
+            {/* DESKTOP: nav + real brand logo marquee */}
+            <div className="hidden md:flex items-center gap-4 lg:gap-6 flex-1 min-w-0">
+              <nav className="flex items-center gap-1 lg:gap-2 shrink-0">
+                <Link
+                  href="/shop"
+                  className="text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
+                >
+                  Shop
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
+                >
+                  My Orders
+                </Link>
+                <Link
+                  href="/about"
+                  className="text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="/cart"
+                  className="relative flex items-center gap-2 text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
+                >
+                  <Icons.Cart />
+                  Cart
+                  {cartCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                      className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full border-2 border-black min-w-[20px] text-center"
+                    >
+                      {cartCount}
+                    </motion.span>
+                  )}
+                </Link>
+              </nav>
 
-              {/* Cart */}
+              {/* Real brand logo marquee (desktop, inline) */}
+              <div className="flex-1 min-w-0">
+                <BrandMarquee />
+              </div>
+            </div>
+
+            {/* MOBILE: cart + hamburger */}
+            <div className="flex md:hidden items-center gap-1">
               <Link
                 href="/cart"
-                className="relative flex items-center gap-2 text-gray-300 hover:text-orange-400 transition-colors duration-200 font-medium px-3 py-2 rounded-md hover:bg-white/5 text-sm lg:text-base"
-              >
-                <Icons.Cart />
-                Cart
-                {cartCount > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                    className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full border-2 border-black min-w-[20px] text-center"
-                  >
-                    {cartCount}
-                  </motion.span>
-                )}
-              </Link>
-            </nav>
-
-            {/* MOBILE — My Orders + Cart */}
-            <div className="flex items-center gap-2 md:hidden">
-              <Link
-                href="/dashboard"
-                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-200"
-                aria-label="My Orders"
-              >
-                <Icons.User />
-              </Link>
-              <Link
-                href="/cart"
-                className="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors duration-200"
+                className="relative p-2 rounded-lg text-gray-300 hover:text-orange-400 hover:bg-white/10 transition-colors duration-200"
                 aria-label="Cart"
               >
                 <Icons.Cart />
@@ -602,8 +592,70 @@ Thank you!`.trim();
                   </span>
                 )}
               </Link>
+              <button
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                className="p-2 rounded-lg text-gray-300 hover:text-orange-400 hover:bg-white/10 transition-colors duration-200"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <Icons.Close /> : <Icons.Menu />}
+              </button>
             </div>
           </div>
+
+          {/* MOBILE: real brand logo marquee strip */}
+          <div className="md:hidden border-t border-white/10">
+            <BrandMarquee />
+          </div>
+
+          {/* MOBILE: drawer with nav items */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.nav
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="md:hidden overflow-hidden border-t border-white/10"
+              >
+                <div className="flex flex-col py-3 space-y-1">
+                  <Link
+                    href="/shop"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-gray-300 hover:text-orange-400 hover:bg-white/5 transition-colors duration-200 font-medium px-3 py-2.5 rounded-md text-sm"
+                  >
+                    Shop
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-gray-300 hover:text-orange-400 hover:bg-white/5 transition-colors duration-200 font-medium px-3 py-2.5 rounded-md text-sm"
+                  >
+                    My Orders
+                  </Link>
+                  <Link
+                    href="/about"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-gray-300 hover:text-orange-400 hover:bg-white/5 transition-colors duration-200 font-medium px-3 py-2.5 rounded-md text-sm"
+                  >
+                    About Us
+                  </Link>
+                  <Link
+                    href="/cart"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="relative flex items-center gap-2 text-gray-300 hover:text-orange-400 hover:bg-white/5 transition-colors duration-200 font-medium px-3 py-2.5 rounded-md text-sm"
+                  >
+                    <Icons.Cart />
+                    Cart
+                    {cartCount > 0 && (
+                      <span className="bg-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+                </div>
+              </motion.nav>
+            )}
+          </AnimatePresence>
         </div>
       </header>
       {/* ===== END HEADER ===== */}
@@ -656,7 +708,8 @@ Thank you!`.trim();
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                Found <span className="font-bold text-orange-600">{filteredProducts.length}</span> result{filteredProducts.length !== 1 ? 's' : ''} for "{searchTerm}"
+                Found <span className="font-bold text-orange-600">{filteredProducts.length}</span> result
+                {filteredProducts.length !== 1 ? "s" : ""} for "{searchTerm}"
               </motion.p>
             )}
           </motion.div>
@@ -739,7 +792,8 @@ Thank you!`.trim();
                         alt={item.name}
                         className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
+                          (e.currentTarget as HTMLImageElement).src =
+                            "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
                         }}
                       />
                       {item.images && item.images.length > 1 && (
@@ -768,9 +822,7 @@ Thank you!`.trim();
                         {item.name}
                       </h3>
 
-                      <div className="mt-1">
-                        {getAvailabilityBadge(item)}
-                      </div>
+                      <div className="mt-1">{getAvailabilityBadge(item)}</div>
 
                       <div className="flex flex-col gap-0.5 mt-1">
                         {item.chassisNumber && (
@@ -780,7 +832,7 @@ Thank you!`.trim();
                         )}
                         {item.variants && item.variants.length > 0 && (
                           <p className="text-[8px] sm:text-[9px] text-blue-600 font-medium">
-                            {item.variants.length} variant{item.variants.length > 1 ? 's' : ''}
+                            {item.variants.length} variant{item.variants.length > 1 ? "s" : ""}
                           </p>
                         )}
                         {item.availabilityDisplay?.message && (
@@ -859,7 +911,8 @@ Thank you!`.trim();
                           alt={selectedProduct.name}
                           className="w-full h-auto max-h-[300px] sm:max-h-[400px] object-contain rounded-xl"
                           onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
+                            (e.currentTarget as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
                           }}
                         />
                         {selectedProduct.images.length > 1 && (
@@ -882,7 +935,7 @@ Thank you!`.trim();
                                   key={idx}
                                   onClick={() => setCurrentImageIndex(idx)}
                                   className={`w-2 h-2 rounded-full transition ${
-                                    idx === currentImageIndex ? 'bg-orange-500 w-4' : 'bg-gray-300'
+                                    idx === currentImageIndex ? "bg-orange-500 w-4" : "bg-gray-300"
                                   }`}
                                 />
                               ))}
@@ -896,7 +949,8 @@ Thank you!`.trim();
                         alt={selectedProduct.name}
                         className="w-full h-auto max-h-[300px] sm:max-h-[400px] object-contain rounded-xl"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
+                          (e.currentTarget as HTMLImageElement).src =
+                            "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=400&q=80";
                         }}
                       />
                     )}
@@ -907,7 +961,7 @@ Thank you!`.trim();
                             key={idx}
                             onClick={() => setCurrentImageIndex(idx)}
                             className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition ${
-                              idx === currentImageIndex ? 'border-orange-500 shadow-md' : 'border-gray-200'
+                              idx === currentImageIndex ? "border-orange-500 shadow-md" : "border-gray-200"
                             }`}
                           >
                             <img src={img.url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
@@ -926,25 +980,32 @@ Thank you!`.trim();
                     {getAvailabilityBadge(selectedProduct)}
                   </div>
 
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                    {selectedProduct.name}
-                  </h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{selectedProduct.name}</h2>
 
                   {selectedProduct.variants && selectedProduct.variants.length > 0 && (
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                      <p className="text-xs text-gray-600 font-semibold uppercase tracking-wider mb-3">Available Variants</p>
+                      <p className="text-xs text-gray-600 font-semibold uppercase tracking-wider mb-3">
+                        Available Variants
+                      </p>
                       <div className="space-y-2.5">
                         {selectedProduct.variants.map((variant) => (
-                          <div key={variant._id || variant.name} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 hover:border-orange-300 transition">
+                          <div
+                            key={variant._id || variant.name}
+                            className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200 hover:border-orange-300 transition"
+                          >
                             <div>
                               <p className="text-sm font-semibold text-gray-900">{variant.name}</p>
                               <p className="text-xs text-gray-500">
                                 Unit: {variant.unit} • Stock: {variant.quantity}
-                                {variant.isDefault && <span className="text-orange-600 ml-2 font-semibold">(Default)</span>}
+                                {variant.isDefault && (
+                                  <span className="text-orange-600 ml-2 font-semibold">(Default)</span>
+                                )}
                               </p>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold text-gray-900">Ksh {variant.price.toLocaleString()}</span>
+                              <span className="text-sm font-bold text-gray-900">
+                                Ksh {variant.price.toLocaleString()}
+                              </span>
                               {selectedProduct.isPurchasable ? (
                                 <button
                                   onClick={() => addToCart(selectedProduct, variant)}
@@ -968,7 +1029,7 @@ Thank you!`.trim();
                     </div>
                   )}
 
-                  {selectedProduct.availabilityStatus === 'IN_STOCK' && (
+                  {selectedProduct.availabilityStatus === "IN_STOCK" && (
                     <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
@@ -978,14 +1039,16 @@ Thank you!`.trim();
                             {selectedProduct.quantity} units available • Delivery: 1-3 business days
                           </p>
                           {selectedProduct.isLowStock && (
-                            <p className="text-xs text-orange-500 font-semibold mt-1">⚠ Only {selectedProduct.quantity} units left!</p>
+                            <p className="text-xs text-orange-500 font-semibold mt-1">
+                              ⚠ Only {selectedProduct.quantity} units left!
+                            </p>
                           )}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {selectedProduct.availabilityStatus === 'INTERNATIONAL_SUPPLIER' && (
+                  {selectedProduct.availabilityStatus === "INTERNATIONAL_SUPPLIER" && (
                     <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
                       <div className="flex items-start gap-3">
                         <Icons.Globe />
@@ -995,7 +1058,7 @@ Thank you!`.trim();
                             <p className="text-xs text-gray-600">Supplier: {selectedProduct.supplierName}</p>
                           )}
                           <p className="text-xs text-gray-600">
-                            Delivery: {selectedProduct.supplierDeliveryTime || '10-21 business days'}
+                            Delivery: {selectedProduct.supplierDeliveryTime || "10-21 business days"}
                           </p>
                           <button
                             onClick={() => openQuoteModal(selectedProduct)}
@@ -1009,7 +1072,7 @@ Thank you!`.trim();
                     </div>
                   )}
 
-                  {selectedProduct.availabilityStatus === 'OUT_OF_STOCK' && (
+                  {selectedProduct.availabilityStatus === "OUT_OF_STOCK" && (
                     <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4">
                       <div className="flex items-start gap-3">
                         <span className="text-2xl">📱</span>
@@ -1033,7 +1096,9 @@ Thank you!`.trim();
 
                   {selectedProduct.chassisNumber && (
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Chassis Number</p>
+                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                        Chassis Number
+                      </p>
                       <p className="text-sm font-mono text-orange-600 font-bold mt-0.5">
                         {selectedProduct.chassisNumber}
                       </p>
@@ -1042,10 +1107,10 @@ Thank you!`.trim();
 
                   {selectedProduct.description && (
                     <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Description</p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        {selectedProduct.description}
+                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                        Description
                       </p>
+                      <p className="text-sm text-gray-700 leading-relaxed">{selectedProduct.description}</p>
                     </div>
                   )}
 
@@ -1109,7 +1174,10 @@ Thank you!`.trim();
             >
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-xl font-bold text-gray-900">Request Quote</h2>
-                <button onClick={closeQuoteModal} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">
+                <button
+                  onClick={closeQuoteModal}
+                  className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition"
+                >
                   <Icons.Close />
                 </button>
               </div>
@@ -1117,11 +1185,14 @@ Thank you!`.trim();
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5">
                 <p className="font-semibold text-gray-900">{quoteProduct.name}</p>
                 <p className="text-sm text-gray-600">
-                  {quoteProduct.availabilityStatus === 'OUT_OF_STOCK' ? 'Out of Stock' : 'Available from Supplier'}
+                  {quoteProduct.availabilityStatus === "OUT_OF_STOCK"
+                    ? "Out of Stock"
+                    : "Available from Supplier"}
                 </p>
                 {selectedVariantForQuote && (
                   <p className="text-sm text-blue-600 mt-1">
-                    Variant: {selectedVariantForQuote.name} ({selectedVariantForQuote.unit}) - Ksh {selectedVariantForQuote.price.toLocaleString()}
+                    Variant: {selectedVariantForQuote.name} ({selectedVariantForQuote.unit}) - Ksh{" "}
+                    {selectedVariantForQuote.price.toLocaleString()}
                   </p>
                 )}
               </div>
@@ -1138,8 +1209,8 @@ Thank you!`.trim();
                         onClick={() => setSelectedShippingMethod(option.value)}
                         className={`w-full p-3.5 rounded-xl border-2 transition flex items-center justify-between ${
                           selectedShippingMethod === option.value
-                            ? 'border-orange-500 bg-orange-50 text-orange-700'
-                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                            ? "border-orange-500 bg-orange-50 text-orange-700"
+                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -1149,7 +1220,9 @@ Thank you!`.trim();
                         <div className="text-right">
                           <span className="text-xs text-gray-500">{option.deliveryTime}</span>
                           {option.cost > 0 && (
-                            <span className="text-xs text-gray-500 block">+Ksh {option.cost.toLocaleString()}</span>
+                            <span className="text-xs text-gray-500 block">
+                              +Ksh {option.cost.toLocaleString()}
+                            </span>
                           )}
                         </div>
                       </button>
